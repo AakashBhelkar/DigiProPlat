@@ -16,7 +16,6 @@ import {
   Chip,
   Paper,
   Stack,
-  Grid,
   Card,
   CardContent,
   IconButton,
@@ -32,6 +31,7 @@ import {
   ListItemText,
   ListItemSecondaryAction,
 } from '@mui/material';
+import Grid from '@mui/material/GridLegacy';
 import {
   ArrowBack,
   ArrowForward,
@@ -53,8 +53,8 @@ import { useAuthStore } from '../store/authStore';
 import { uploadMultipleFiles } from '../lib/supabase';
 import toast from 'react-hot-toast';
 
-const MotionPaper = motion(Paper);
-const MotionBox = motion(Box);
+const MotionPaper = motion.create(Paper);
+const MotionBox = motion.create(Box);
 
 interface ProductFormData {
   title: string;

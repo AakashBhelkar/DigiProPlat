@@ -17,7 +17,14 @@ export function useLocalStorage(key, initialState) {
 
     if (restoredValue) {
       if (multiValue) {
-        set((prevValue) => ({ ...prevValue, ...restoredValue }));
+        set((prevValue) => {
+          const merged = { ...prevValue, ...restoredValue };
+          // Force light mode as default - override any saved dark mode preference
+          if (merged.colorScheme && merged.colorScheme !== 'light') {
+            merged.colorScheme = 'light';
+          }
+          return merged;
+        });
       } else {
         set(restoredValue);
       }
@@ -42,6 +49,13 @@ export function useLocalStorage(key, initialState) {
   const setField = useCallback(
     (name, updateValue) => {
       if (multiValue) {
+        // Block dark mode - always use light mode
+        if (name === 'colorScheme' && updateValue === 'dark') {
+          setState({
+            [name]: 'light',
+          });
+          return;
+        }
         setState({
           [name]: updateValue,
         });

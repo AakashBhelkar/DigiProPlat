@@ -5,7 +5,6 @@ import {
   Container,
   Typography,
   Button,
-  Grid,
   Card,
   CardContent,
   Avatar,
@@ -28,6 +27,7 @@ import {
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
+import Grid from '@mui/material/GridLegacy';
 import {
   Menu as MenuIcon,
   Close as CloseIcon,
@@ -50,9 +50,9 @@ import {
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 
-const MotionBox = motion(Box);
-const MotionCard = motion(Card);
-const MotionPaper = motion(Paper);
+const MotionBox = motion.create(Box);
+const MotionCard = motion.create(Card);
+const MotionPaper = motion.create(Paper);
 
 export const HomeNew: React.FC = () => {
   const theme = useTheme();

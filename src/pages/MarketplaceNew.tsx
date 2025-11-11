@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Container,
-  Grid,
   Card,
   CardContent,
   CardMedia,
@@ -30,6 +29,7 @@ import {
   useTheme,
   alpha,
 } from '@mui/material';
+import Grid from '@mui/material/GridLegacy';
 import {
   Search as SearchIcon,
   FilterList as FilterIcon,
@@ -49,8 +49,8 @@ import { CheckoutModal } from '../components/Payment/CheckoutModal';
 import toast from 'react-hot-toast';
 
 // Motion components
-const MotionCard = motion(Card);
-const MotionGrid = motion(Grid);
+const MotionCard = motion.create(Card);
+const MotionGrid = motion.create(Grid);
 
 interface MarketplaceProduct {
   id: string;
@@ -302,7 +302,8 @@ export const MarketplaceNew: React.FC = () => {
 
   useEffect(() => {
     fetchProducts();
-  }, [fetchProducts]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', pb: 6 }}>

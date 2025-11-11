@@ -10,6 +10,8 @@ const MuiCard = {
       boxShadow: theme.customShadows.card,
       borderRadius: theme.shape.borderRadius * 2,
       zIndex: 0, // Fix Safari overflow: hidden with border radius
+      backgroundColor: theme.vars.palette.background.paper, // Force white/light background
+      color: theme.vars.palette.text.primary, // Ensure readable text color
     }),
   },
 };
@@ -41,7 +43,13 @@ const MuiCardContent = {
   /** **************************************
    * STYLE
    *************************************** */
-  styleOverrides: { root: ({ theme }) => ({ padding: theme.spacing(3) }) },
+  styleOverrides: {
+    root: ({ theme }) => ({
+      padding: theme.spacing(3),
+      backgroundColor: theme.vars.palette.background.paper, // Force white/light background
+      color: theme.vars.palette.text.primary, // Ensure readable text color
+    }),
+  },
 };
 
 // ----------------------------------------------------------------------

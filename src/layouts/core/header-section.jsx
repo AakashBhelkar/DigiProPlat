@@ -81,6 +81,7 @@ export function HeaderSection({
         sx={{
           ...toolbarStyles.default,
           ...(!disableOffset && offsetTop && toolbarStyles.offset),
+          px: { xs: 2, sm: 3, md: 4 },
           ...slotProps?.toolbar?.sx,
         }}
       >
@@ -90,6 +91,7 @@ export function HeaderSection({
             height: 1,
             display: 'flex',
             alignItems: 'center',
+            px: { xs: 0, sm: 0 },
             ...slotProps?.container?.sx,
           }}
         >

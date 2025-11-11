@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { supabase, handleSupabaseError } from '../lib/supabase';
+import { supabase, supabaseAdmin, handleSupabaseError } from '../lib/supabase';
 import toast from 'react-hot-toast';
 
 interface Order {
@@ -47,27 +47,49 @@ export const useOrderStore = create<OrderState>((set, get) => ({
   fetchOrders: async () => {
     set({ isLoading: true });
     try {
-      const { data, error } = await supabase
+      // Fetch transactions first
+      const { data: transactions, error: transactionsError } = await supabase
         .from('transactions')
         .select(`
           *,
-          products (title),
-          profiles (email)
+          products (title)
         `)
         .eq('type', 'sale')
         .order('created_at', { ascending: false });
 
-      if (error) {
-        handleSupabaseError(error);
+      if (transactionsError) {
+        handleSupabaseError(transactionsError);
         return;
       }
 
-      const orders: Order[] = data.map(transaction => ({
+      if (!transactions || transactions.length === 0) {
+        set({ orders: [] });
+        return;
+      }
+
+      // Fetch user emails from auth.users (profiles table doesn't have email)
+      const userIds = [...new Set(transactions.map(t => t.user_id).filter(Boolean))];
+      const userEmails: Record<string, string> = {};
+      
+      try {
+        const { data: authUsers } = await supabaseAdmin.auth.admin.listUsers();
+        if (authUsers?.users) {
+          authUsers.users.forEach(user => {
+            if (userIds.includes(user.id)) {
+              userEmails[user.id] = user.email || 'Unknown';
+            }
+          });
+        }
+      } catch (authErr) {
+        console.warn('Could not fetch user emails:', authErr);
+      }
+
+      const orders: Order[] = transactions.map(transaction => ({
         id: transaction.id,
         productId: transaction.product_id,
         productTitle: transaction.products?.title || 'Unknown Product',
         customerId: transaction.user_id,
-        customerEmail: transaction.profiles?.email || 'Unknown Customer',
+        customerEmail: transaction.user_id ? (userEmails[transaction.user_id] || 'Unknown Customer') : 'Unknown Customer',
         amount: transaction.amount,
         status: transaction.status,
         paymentMethod: transaction.payment_method || 'Unknown',
@@ -83,6 +105,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
       set({ orders });
     } catch (error: any) {
       toast.error(error.message || 'Failed to fetch orders');
+      set({ orders: [] });
     } finally {
       set({ isLoading: false });
     }

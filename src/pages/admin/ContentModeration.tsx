@@ -8,6 +8,7 @@ export const ContentModeration: React.FC = () => {
   const { reports, fetchReports, updateReportStatus, isLoading } = useAdminStore();
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'reviewing' | 'resolved' | 'dismissed'>('all');
   const [typeFilter, setTypeFilter] = useState<'all' | 'spam' | 'inappropriate' | 'copyright' | 'fraud' | 'other'>('all');
+  const [selectedReport, setSelectedReport] = useState<string | null>(null);
 
   useEffect(() => {
     fetchReports();

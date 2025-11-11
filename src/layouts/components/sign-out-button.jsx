@@ -4,27 +4,24 @@ import Button from '@mui/material/Button';
 
 import { useRouter } from 'src/routes/hooks';
 
-import { useAuthContext } from 'src/auth/hooks';
-import { signOut } from 'src/auth/context/jwt/action';
+import { useAuthStore } from 'src/store/authStore';
 
 // ----------------------------------------------------------------------
 
 export function SignOutButton({ onClose, ...other }) {
   const router = useRouter();
 
-  const { checkUserSession } = useAuthContext();
+  const { logout } = useAuthStore();
 
   const handleLogout = useCallback(async () => {
     try {
-      await signOut();
-      await checkUserSession?.();
-
+      await logout();
       onClose?.();
-      router.refresh();
+      router.push('/login');
     } catch (error) {
       console.error(error);
     }
-  }, [checkUserSession, onClose, router]);
+  }, [logout, onClose, router]);
 
   return (
     <Button fullWidth variant="soft" size="large" color="error" onClick={handleLogout} {...other}>

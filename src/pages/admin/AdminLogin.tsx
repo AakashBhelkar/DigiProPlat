@@ -1,125 +1,171 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Loader2, Shield } from 'lucide-react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z as zod } from 'zod';
+import LinkMui from '@mui/material/Link';
+import Alert from '@mui/material/Alert';
+import Stack from '@mui/material/Stack';
+import IconButton from '@mui/material/IconButton';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import CircularProgress from '@mui/material/CircularProgress';
+import InputAdornment from '@mui/material/InputAdornment';
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Avatar from '@mui/material/Avatar';
 import { useAdminStore } from '../../store/adminStore';
-import { motion } from 'framer-motion';
+import { Iconify } from '../../components/iconify';
+import { Form, Field } from '../../components/hook-form';
+import { AuthSplitLayout } from '../../layouts/auth-split';
 
-interface AdminLoginFormData {
-  email: string;
-  password: string;
-}
+// ----------------------------------------------------------------------
+
+const SignInSchema = zod.object({
+  email: zod
+    .string()
+    .min(1, { message: 'Email is required!' })
+    .email({ message: 'Email must be a valid email address!' }),
+  password: zod
+    .string()
+    .min(1, { message: 'Password is required!' })
+    .min(6, { message: 'Password must be at least 6 characters!' }),
+});
+
+// ----------------------------------------------------------------------
 
 export const AdminLogin: React.FC = () => {
+  const [errorMsg, setErrorMsg] = useState<string>('');
   const [showPassword, setShowPassword] = useState(false);
   const { login, isLoading } = useAdminStore();
   const navigate = useNavigate();
-  const { register, handleSubmit, formState: { errors } } = useForm<AdminLoginFormData>();
 
-  const onSubmit = async (data: AdminLoginFormData) => {
-    try {
-      await login(data.email, data.password);
-      navigate('/admin/dashboard');
-    } catch (error) {
-      console.error('Admin login failed:', error);
-    }
+  const defaultValues = {
+    email: '',
+    password: '',
   };
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="max-w-md w-full mx-4"
+  const methods = useForm({
+    resolver: zodResolver(SignInSchema),
+    defaultValues,
+  });
+
+  const {
+    handleSubmit,
+    formState: { isSubmitting },
+  } = methods;
+
+  const onSubmit = handleSubmit(async (data) => {
+    try {
+      setErrorMsg('');
+      await login(data.email, data.password);
+      navigate('/admin/dashboard');
+    } catch (error: unknown) {
+      console.error('Admin login failed:', error);
+      if (error instanceof Error) {
+        setErrorMsg(error.message || 'Login failed. Please try again.');
+      } else {
+        setErrorMsg('Login failed. Please try again.');
+      }
+    }
+  });
+
+  const renderHead = (
+    <Stack spacing={1.5} sx={{ mb: 5 }}>
+      <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
+        <Avatar
+          sx={{
+            bgcolor: 'primary.main',
+            width: 64,
+            height: 64,
+          }}
+        >
+          <Iconify icon="solar:shield-check-bold-duotone" width={32} />
+        </Avatar>
+        <Box>
+          <Typography variant="h5">Admin Portal</Typography>
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+            Sign in to access the admin dashboard
+          </Typography>
+        </Box>
+      </Stack>
+
+      <Card variant="outlined" sx={{ bgcolor: 'info.lighter', borderColor: 'info.light', p: 2 }}>
+        <Typography variant="subtitle2" fontWeight={700} gutterBottom>
+          Demo Credentials
+        </Typography>
+        <Stack spacing={0.5}>
+          <Typography variant="body2">
+            <strong>Email:</strong> admin@digiproplat.com
+          </Typography>
+          <Typography variant="body2">
+            <strong>Password:</strong> password
+          </Typography>
+        </Stack>
+      </Card>
+    </Stack>
+  );
+
+  const renderForm = (
+    <Stack spacing={3}>
+      <Field.Text name="email" label="Email address" InputLabelProps={{ shrink: true }} />
+
+      <Field.Text
+        name="password"
+        label="Password"
+        placeholder="6+ characters"
+        type={showPassword ? 'text' : 'password'}
+        InputLabelProps={{ shrink: true }}
+        InputProps={{
+          endAdornment: (
+            <InputAdornment position="end">
+              <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
+                <Iconify icon={showPassword ? 'solar:eye-bold' : 'solar:eye-closed-bold'} />
+              </IconButton>
+            </InputAdornment>
+          ),
+        }}
+      />
+
+      <Button
+        fullWidth
+        color="inherit"
+        size="large"
+        type="submit"
+        variant="contained"
+        disabled={isSubmitting || isLoading}
+        startIcon={isSubmitting || isLoading ? <CircularProgress size={20} /> : null}
       >
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-100 rounded-full mb-4">
-              <Shield className="h-8 w-8 text-indigo-600" />
-            </div>
-            <h2 className="text-3xl font-bold text-gray-900">Admin Portal</h2>
-            <p className="text-gray-600 mt-2">Sign in to access the admin dashboard</p>
-          </div>
+        {isSubmitting || isLoading ? 'Signing in...' : 'Sign in'}
+      </Button>
+    </Stack>
+  );
 
-          {/* Demo Credentials Info */}
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <h3 className="text-sm font-medium text-blue-900 mb-2">Demo Credentials</h3>
-            <div className="text-sm text-blue-700">
-              <p><strong>Email:</strong> admin@digiproplat.com</p>
-              <p><strong>Password:</strong> password</p>
-            </div>
-          </div>
-          
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email Address
-              </label>
-              <input
-                {...register('email', { 
-                  required: 'Email is required',
-                  pattern: {
-                    value: /^\S+@\S+$/i,
-                    message: 'Invalid email address'
-                  }
-                })}
-                type="email"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                placeholder="Enter your email"
-              />
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
-              )}
-            </div>
+  return (
+    <AuthSplitLayout
+      section={{
+        title: 'Admin Portal',
+        subtitle: 'Secure access to platform administration',
+      }}
+    >
+      {renderHead}
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  {...register('password', { required: 'Password is required' })}
-                  type={showPassword ? 'text' : 'password'}
-                  className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                  placeholder="Enter your password"
-                />
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400" />
-                  ) : (
-                    <Eye className="h-5 w-5 text-gray-400" />
-                  )}
-                </button>
-              </div>
-              {errors.password && (
-                <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
-              )}
-            </div>
+      {!!errorMsg && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {errorMsg}
+        </Alert>
+      )}
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-indigo-600 text-white py-3 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
-            >
-              {isLoading ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : (
-                'Sign In'
-              )}
-            </button>
-          </form>
+      <Form methods={methods} onSubmit={onSubmit}>
+        {renderForm}
+      </Form>
 
-          <div className="mt-6 text-center">
-            <p className="text-xs text-gray-500">
-              Authorized personnel only. All activities are logged.
-            </p>
-          </div>
-        </div>
-      </motion.div>
-    </div>
+      <Box sx={{ mt: 3, textAlign: 'center' }}>
+        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+          Authorized personnel only. All activities are logged.
+        </Typography>
+      </Box>
+    </AuthSplitLayout>
   );
 };

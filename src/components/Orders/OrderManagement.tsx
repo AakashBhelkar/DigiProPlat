@@ -1,7 +1,36 @@
 import React, { useState } from 'react';
-import { Download, Eye, RefreshCw, Calendar, Search, Filter } from 'lucide-react';
-import { motion } from 'framer-motion';
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Stack,
+  TextField,
+  Button,
+  Chip,
+  IconButton,
+  Menu,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
+  InputAdornment,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Avatar,
+  LinearProgress,
+  alpha,
+  useTheme,
+} from '@mui/material';
+import { Iconify } from '../iconify';
 import { formatDistanceToNow } from 'date-fns';
+import { motion } from 'framer-motion';
+
+const MotionCard = motion.create(Card);
 
 interface Order {
   id: string;
@@ -19,238 +48,326 @@ interface OrderManagementProps {
   orders: Order[];
   onRefund: (orderId: string) => void;
   onResendDownloadLink: (orderId: string) => void;
+  showBlankTable?: boolean;
 }
 
 export const OrderManagement: React.FC<OrderManagementProps> = ({
   orders,
   onRefund,
-  onResendDownloadLink
+  onResendDownloadLink,
+  showBlankTable = false,
 }) => {
+  const theme = useTheme();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'pending' | 'failed' | 'refunded'>('all');
-  const [selectedOrder, setSelectedOrder] = useState<string | null>(null);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
-  const filteredOrders = orders.filter(order => {
-    const matchesSearch = order.productTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.customerEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.id.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredOrders = orders.filter((order) => {
+    const matchesSearch =
+      order.productTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.customerEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.id.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
-  const getStatusBadge = (status: string) => {
-    const badges = {
-      completed: 'bg-green-100 text-green-800',
-      pending: 'bg-yellow-100 text-yellow-800',
-      failed: 'bg-red-100 text-red-800',
-      refunded: 'bg-gray-100 text-gray-800'
-    };
-    return badges[status as keyof typeof badges] || badges.pending;
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, orderId: string) => {
+    setAnchorEl(event.currentTarget);
+    setSelectedOrderId(orderId);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+    setSelectedOrderId(null);
   };
 
   const getTotalRevenue = () => {
     return filteredOrders
-      .filter(order => order.status === 'completed')
+      .filter((order) => order.status === 'completed')
       .reduce((sum, order) => sum + order.amount, 0);
   };
 
+  const stats = [
+    {
+      title: 'Total Orders',
+      value: filteredOrders.length.toString(),
+      icon: 'solar:eye-bold-duotone',
+      color: theme.palette.primary.main,
+      lightColor: alpha(theme.palette.primary.main, 0.12),
+    },
+    {
+      title: 'Completed',
+      value: filteredOrders.filter((o) => o.status === 'completed').length.toString(),
+      icon: 'solar:download-bold-duotone',
+      color: theme.palette.success.main,
+      lightColor: alpha(theme.palette.success.main, 0.12),
+    },
+    {
+      title: 'Revenue',
+      value: `$${getTotalRevenue().toFixed(2)}`,
+      icon: 'solar:calendar-bold-duotone',
+      color: theme.palette.info.main,
+      lightColor: alpha(theme.palette.info.main, 0.12),
+    },
+    {
+      title: 'Refunds',
+      value: filteredOrders.filter((o) => o.status === 'refunded').length.toString(),
+      icon: 'solar:refresh-bold-duotone',
+      color: theme.palette.warning.main,
+      lightColor: alpha(theme.palette.warning.main, 0.12),
+    },
+  ];
+
+  const getStatusChip = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return <Chip label="Completed" color="success" size="small" />;
+      case 'pending':
+        return <Chip label="Pending" color="warning" size="small" />;
+      case 'failed':
+        return <Chip label="Failed" color="error" size="small" />;
+      case 'refunded':
+        return <Chip label="Refunded" color="default" size="small" />;
+      default:
+        return <Chip label={status} size="small" />;
+    }
+  };
+
   return (
-    <div className="space-y-6">
+    <Stack spacing={4}>
       {/* Header Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg p-6 text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-white text-sm font-medium">Total Orders</p>
-              <p className="text-2xl font-bold text-white">{filteredOrders.length}</p>
-            </div>
-            <Eye className="h-6 w-6 text-white" />
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg p-6 text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-white text-sm font-medium">Completed</p>
-              <p className="text-2xl font-bold text-white">
-                {filteredOrders.filter(o => o.status === 'completed').length}
-              </p>
-            </div>
-            <Download className="h-6 w-6 text-white" />
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg p-6 text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-white text-sm font-medium">Revenue</p>
-              <p className="text-2xl font-bold text-white">${getTotalRevenue().toFixed(2)}</p>
-            </div>
-            <Calendar className="h-6 w-6 text-white" />
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg p-6 text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-white text-sm font-medium">Refunds</p>
-              <p className="text-2xl font-bold text-white">
-                {filteredOrders.filter(o => o.status === 'refunded').length}
-              </p>
-            </div>
-            <RefreshCw className="h-6 w-6 text-white" />
-          </div>
-        </div>
-      </div>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3}>
+        {stats.map((stat, index) => (
+          <MotionCard
+            key={stat.title}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+            sx={{
+              flex: 1,
+              minHeight: 120,
+              background: `linear-gradient(135deg, ${stat.color} 0%, ${alpha(stat.color, 0.8)} 100%)`,
+              color: 'white',
+            }}
+          >
+            <CardContent sx={{ p: 3 }}>
+              <Stack direction="row" alignItems="center" justifyContent="space-between">
+                <Box>
+                  <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.8)', mb: 1 }}>
+                    {stat.title}
+                  </Typography>
+                  <Typography variant="h3" fontWeight={800} sx={{ color: 'white' }}>
+                    {stat.value}
+                  </Typography>
+                </Box>
+                <Avatar
+                  sx={{
+                    bgcolor: 'rgba(255,255,255,0.2)',
+                    color: 'white',
+                    width: 48,
+                    height: 48,
+                  }}
+                >
+                  <Iconify icon={stat.icon} width={24} />
+                </Avatar>
+              </Stack>
+            </CardContent>
+          </MotionCard>
+        ))}
+      </Stack>
 
       {/* Filters */}
-      <div className="bg-white dark:bg-white rounded-lg shadow-sm border border-gray-300 dark:border-gray-700 p-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-              <input
-                type="text"
-                placeholder="Search orders..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-50 placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              />
-            </div>
-          </div>
-          <div className="flex items-center space-x-4">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as any)}
-              className="px-4 py-2 border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-50 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+      <Card>
+        <CardContent>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            <TextField
+              fullWidth
+              placeholder="Search orders..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Iconify icon="solar:magnifer-bold-duotone" />
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <FormControl sx={{ minWidth: 200 }}>
+              <InputLabel>Status</InputLabel>
+              <Select
+                value={statusFilter}
+                label="Status"
+                onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
+              >
+                <MenuItem value="all">All Status</MenuItem>
+                <MenuItem value="completed">Completed</MenuItem>
+                <MenuItem value="pending">Pending</MenuItem>
+                <MenuItem value="failed">Failed</MenuItem>
+                <MenuItem value="refunded">Refunded</MenuItem>
+              </Select>
+            </FormControl>
+            <Button
+              variant="outlined"
+              startIcon={<Iconify icon="solar:filter-bold-duotone" />}
+              sx={{ px: 3 }}
             >
-              <option value="all">All Status</option>
-              <option value="completed">Completed</option>
-              <option value="pending">Pending</option>
-              <option value="failed">Failed</option>
-              <option value="refunded">Refunded</option>
-            </select>
-            <button className="flex items-center space-x-2 px-4 py-2 border border-gray-300 dark:border-gray-700 bg-primary-500 hover:bg-primary-500/90 text-white rounded-lg transition-colors">
-              <Filter className="h-4 w-4 text-white" />
-              <span>More Filters</span>
-            </button>
-          </div>
-        </div>
-      </div>
+              More Filters
+            </Button>
+          </Stack>
+        </CardContent>
+      </Card>
 
       {/* Orders Table */}
-      <div className="bg-white dark:bg-white rounded-lg shadow-sm border border-gray-300 dark:border-gray-700 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-300 dark:divide-gray-700">
-            <thead className="bg-gray-50 dark:bg-gray-900">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Order
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Customer
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Amount
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Downloads
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Date
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+      <Card>
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ fontWeight: 700 }}>Order</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Customer</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Amount</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Downloads</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Date</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 700 }}>
                   Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white dark:bg-white divide-y divide-gray-300 dark:divide-gray-700">
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
               {filteredOrders.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400 text-base">
-                    No orders found.
-                  </td>
-                </tr>
+                <TableRow>
+                  <TableCell colSpan={7} align="center" sx={{ py: 8 }}>
+                    <Stack spacing={2} alignItems="center">
+                      <Iconify
+                        icon="solar:cart-large-2-bold-duotone"
+                        width={64}
+                        sx={{ color: 'text.disabled' }}
+                      />
+                      <Typography variant="h6" color="text.secondary">
+                        No orders found
+                      </Typography>
+                      <Typography variant="body2" color="text.disabled">
+                        Try adjusting your search terms or filters.
+                      </Typography>
+                    </Stack>
+                  </TableCell>
+                </TableRow>
               ) : (
-                filteredOrders.map((order, index) => (
-                  <motion.tr
+                filteredOrders.map((order) => (
+                  <TableRow
                     key={order.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="hover:bg-gray-50"
+                    sx={{
+                      '&:hover': {
+                        bgcolor: alpha(theme.palette.primary.main, 0.04),
+                      },
+                    }}
                   >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">
+                    <TableCell>
+                      <Box>
+                        <Typography variant="subtitle2" fontWeight={600}>
                           {order.productTitle}
-                        </div>
-                        <div className="text-sm text-gray-500">#{order.id}</div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{order.customerEmail}</div>
-                      <div className="text-sm text-gray-500">{order.paymentMethod}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">${order.amount}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(order.status)}`}>
-                        {order.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {order.downloadCount} / {order.maxDownloads}
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-                        <div 
-                          className="bg-indigo-600 h-2 rounded-full" 
-                          style={{ width: `${(order.downloadCount / order.maxDownloads) * 100}%` }}
-                        ></div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDistanceToNow(new Date(order.createdAt))} ago
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex items-center space-x-2">
-                        <button
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          #{order.id}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Box>
+                        <Typography variant="body2" fontWeight={600}>
+                          {order.customerEmail}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {order.paymentMethod}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" fontWeight={600}>
+                        ${order.amount}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>{getStatusChip(order.status)}</TableCell>
+                    <TableCell>
+                      <Box>
+                        <Typography variant="body2" fontWeight={600}>
+                          {order.downloadCount} / {order.maxDownloads}
+                        </Typography>
+                        <LinearProgress
+                          variant="determinate"
+                          value={(order.downloadCount / order.maxDownloads) * 100}
+                          sx={{ mt: 1, height: 6, borderRadius: 1 }}
+                        />
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" color="text.secondary">
+                        {formatDistanceToNow(new Date(order.createdAt))} ago
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="right">
+                      <Stack direction="row" spacing={1} justifyContent="flex-end">
+                        <IconButton
+                          size="small"
                           onClick={() => onResendDownloadLink(order.id)}
-                          className="text-indigo-600 hover:text-indigo-900 p-1 rounded"
-                          title="Resend download link"
+                          color="primary"
                         >
-                          <Download className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => setSelectedOrder(selectedOrder === order.id ? null : order.id)}
-                          className="text-gray-600 hover:text-gray-900 p-1 rounded"
-                          title="View details"
+                          <Iconify icon="solar:download-bold-duotone" />
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          onClick={(e) => handleMenuOpen(e, order.id)}
                         >
-                          <Eye className="h-4 w-4" />
-                        </button>
-                        {order.status === 'completed' && (
-                          <button
-                            onClick={() => onRefund(order.id)}
-                            className="text-red-600 hover:text-red-900 p-1 rounded"
-                            title="Process refund"
-                          >
-                            <RefreshCw className="h-4 w-4" />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </motion.tr>
+                          <Iconify icon="solar:menu-dots-vertical-bold-duotone" />
+                        </IconButton>
+                      </Stack>
+                    </TableCell>
+                  </TableRow>
                 ))
               )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Card>
+
+      {/* Actions Menu */}
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+      >
+        <MenuItem onClick={handleMenuClose}>
+          <Iconify icon="solar:eye-bold-duotone" sx={{ mr: 1 }} />
+          View Details
+        </MenuItem>
+        {selectedOrderId && (
+          <>
+            {orders.find((o) => o.id === selectedOrderId)?.status === 'completed' && (
+              <MenuItem
+                onClick={() => {
+                  onRefund(selectedOrderId);
+                  handleMenuClose();
+                }}
+                sx={{ color: 'error.main' }}
+              >
+                <Iconify icon="solar:refresh-bold-duotone" sx={{ mr: 1 }} />
+                Process Refund
+              </MenuItem>
+            )}
+          </>
+        )}
+      </Menu>
+    </Stack>
   );
 };

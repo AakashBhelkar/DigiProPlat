@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Badge from '@mui/material/Badge';
@@ -5,7 +6,7 @@ import Tooltip from '@mui/material/Tooltip';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import Drawer, { drawerClasses } from '@mui/material/Drawer';
-import { useTheme, useColorScheme } from '@mui/material/styles';
+import { useTheme } from '@mui/material/styles';
 
 import COLORS from 'src/theme/core/colors.json';
 import { paper, varAlpha } from 'src/theme/styles';
@@ -39,7 +40,15 @@ export function SettingsDrawer({
 
   const settings = useSettingsContext();
 
-  const { mode, setMode } = useColorScheme();
+  // Force light mode - prevent dark mode
+  // We control mode via data attribute, not setMode (which requires colorSchemeSelector configuration)
+  useEffect(() => {
+    // Force light mode using data attribute directly
+    if (typeof window !== 'undefined') {
+      document.documentElement.setAttribute('data-mui-color-scheme', 'light');
+      localStorage.setItem('theme-mode', 'light');
+    }
+  }, []);
 
   const renderHead = (
     <Box display="flex" alignItems="center" sx={{ py: 2, pr: 1, pl: 2.5 }}>
@@ -49,13 +58,17 @@ export function SettingsDrawer({
 
       <FullScreenButton />
 
-      <Tooltip title="Reset">
-        <IconButton
-          onClick={() => {
-            settings.onReset();
-            setMode(defaultSettings.colorScheme);
-          }}
-        >
+          <Tooltip title="Reset">
+            <IconButton
+              onClick={() => {
+                settings.onReset();
+                // Force light mode via data attribute
+                if (typeof window !== 'undefined') {
+                  document.documentElement.setAttribute('data-mui-color-scheme', 'light');
+                  localStorage.setItem('theme-mode', 'light');
+                }
+              }}
+            >
           <Badge color="error" variant="dot" invisible={!settings.canReset}>
             <Iconify icon="solar:restart-bold" />
           </Badge>
@@ -70,17 +83,8 @@ export function SettingsDrawer({
     </Box>
   );
 
-  const renderMode = (
-    <BaseOption
-      label="Dark mode"
-      icon="moon"
-      selected={settings.colorScheme === 'dark'}
-      onClick={() => {
-        settings.onUpdateField('colorScheme', mode === 'light' ? 'dark' : 'light');
-        setMode(mode === 'light' ? 'dark' : 'light');
-      }}
-    />
-  );
+  // Dark mode removed - only light mode is available
+  const renderMode = null;
 
   const renderContrast = (
     <BaseOption
@@ -178,7 +182,6 @@ export function SettingsDrawer({
       <Scrollbar>
         <Stack spacing={6} sx={{ px: 2.5, pb: 5 }}>
           <Box gap={2} display="grid" gridTemplateColumns="repeat(2, 1fr)">
-            {!hideColorScheme && renderMode}
             {!hideContrast && renderContrast}
             {!hideDirection && renderRTL}
             {!hideCompact && renderCompact}

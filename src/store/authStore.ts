@@ -27,21 +27,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   checkAuth: async () => {
     try {
+      set({ isLoading: true });
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session?.user) {
-        // Fetch user profile and join with user_subscriptions and subscription_plans only
-        const { data: profile, error } = await supabase
+        // Fetch user profile first
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select(`
-            *,
-            user_subscriptions (
-              *,
-              subscription_plans (*)
-            )
-          `)
+          .select('*')
           .eq('id', session.user.id)
           .single();
+
+        if (profileError) {
+          handleSupabaseError(profileError);
+          set({ user: null, isAuthenticated: false, isLoading: false });
+          return;
+        }
 
         // If profile is missing, bail out and log. The project expects a DB trigger to
         // create a `profiles` row when a new auth user is created (see migrations).
@@ -49,27 +50,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         // profiles row won't exist and the app can't build a user object.
         if (!profile) {
           console.warn('No profile found for user', session.user.id, '- ensure migrations/triggers are applied on your Supabase project.');
+          set({ user: null, isAuthenticated: false, isLoading: false });
           return;
         }
 
-        if (error) {
-          handleSupabaseError(error);
-          return;
-        }
-
-        if (!profile) {
-          // Still no profile after attempted creation — bail out safely
-          console.warn('No profile available for user', session.user.id);
-          return;
-        }
         // Use email from session.user
         const email = session.user.email;
         if (!email) {
           toast.error('User email not found.');
+          set({ user: null, isAuthenticated: false, isLoading: false });
           return;
         }
 
-        const subscription = profile.user_subscriptions?.[0]?.subscription_plans || {
+        // Fetch subscription separately to avoid relationship issues
+        let subscription = {
           id: '1',
           name: 'free',
           price: 0,
@@ -81,6 +75,30 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             aiGenerations: 5
           }
         };
+
+        try {
+          const { data: userSubscriptions, error: subError } = await supabase
+            .from('user_subscriptions')
+            .select(`
+              *,
+              subscription_plans (*)
+            `)
+            .eq('user_id', session.user.id)
+            .eq('status', 'active')
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+          if (!subError && userSubscriptions && userSubscriptions.length > 0) {
+            const userSub = userSubscriptions[0];
+            if (userSub.subscription_plans) {
+              subscription = Array.isArray(userSub.subscription_plans) 
+                ? userSub.subscription_plans[0] 
+                : userSub.subscription_plans as any;
+            }
+          }
+        } catch (subErr) {
+          console.warn('Could not fetch subscription, using default:', subErr);
+        }
 
         const user: User = {
           id: profile.id,
@@ -106,10 +124,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           walletBalance: (profile.wallet_balance as number) ?? 0
         };
 
-        set({ user, isAuthenticated: true });
+        set({ user, isAuthenticated: true, isLoading: false });
+      } else {
+        // No session - explicitly set to false
+        set({ user: null, isAuthenticated: false, isLoading: false });
       }
     } catch (error) {
       console.error('Auth check failed:', error);
+      set({ user: null, isAuthenticated: false, isLoading: false });
     }
   },
 
@@ -239,11 +261,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   }
 }));
 
-// Listen for auth changes
-supabase.auth.onAuthStateChange((event) => {
-  if (event === 'SIGNED_IN') {
-    useAuthStore.getState().checkAuth();
-  } else if (event === 'SIGNED_OUT') {
-    useAuthStore.setState({ user: null, isAuthenticated: false });
-  }
-});
+// Listen for auth changes - only set up once
+let authListenerSetup = false;
+if (!authListenerSetup && typeof window !== 'undefined') {
+  supabase.auth.onAuthStateChange((event) => {
+    // Only update state on actual auth changes, not on initial session check
+    if (event === 'SIGNED_IN') {
+      const currentState = useAuthStore.getState();
+      // Only call checkAuth if not already authenticated to prevent loops
+      if (!currentState.isAuthenticated) {
+        useAuthStore.getState().checkAuth();
+      }
+    } else if (event === 'SIGNED_OUT') {
+      useAuthStore.setState({ user: null, isAuthenticated: false, isLoading: false });
+    }
+  });
+  authListenerSetup = true;
+}

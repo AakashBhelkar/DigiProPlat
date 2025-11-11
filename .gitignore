@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Vite
+.vite
+.vite-cache
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -23,3 +27,12 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Temporary files
+*.tmp
+*.temp
+.cache

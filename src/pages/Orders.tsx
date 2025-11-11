@@ -1,7 +1,16 @@
 import React, { useEffect, useState } from 'react';
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Stack,
+  CircularProgress,
+} from '@mui/material';
 import { OrderManagement } from '../components/Orders/OrderManagement';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
+import { DashboardContent } from '../layouts/dashboard/main';
 
 interface Order {
   id: string;
@@ -57,26 +66,36 @@ export const Orders: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-white space-y-6">
-      {/* Responsive Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-50">Order Management</h1>
-          <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">Track and manage customer orders and downloads</p>
-        </div>
-      </div>
-      <div className="overflow-x-auto rounded-lg bg-white dark:bg-white shadow-sm border border-gray-300 dark:border-gray-700 p-4 sm:p-6">
-        {loading ? (
-          <div className="p-6 text-center text-gray-600 dark:text-gray-400">Loading orders...</div>
-        ) : (
-          <OrderManagement
-            orders={orders}
-            onRefund={handleRefund}
-            onResendDownloadLink={handleResendDownloadLink}
-            showBlankTable={true}
-          />
-        )}
-      </div>
-    </div>
+    <DashboardContent>
+      <Stack spacing={4}>
+        {/* Header */}
+        <Box>
+          <Typography variant="h4" fontWeight={700} gutterBottom>
+            Order Management
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Track and manage customer orders and downloads
+          </Typography>
+        </Box>
+
+        {/* Orders Table */}
+        <Card>
+          <CardContent>
+            {loading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
+                <CircularProgress />
+              </Box>
+            ) : (
+              <OrderManagement
+                orders={orders}
+                onRefund={handleRefund}
+                onResendDownloadLink={handleResendDownloadLink}
+                showBlankTable={true}
+              />
+            )}
+          </CardContent>
+        </Card>
+      </Stack>
+    </DashboardContent>
   );
 };

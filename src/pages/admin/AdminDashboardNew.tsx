@@ -1,14 +1,11 @@
 import { useEffect } from 'react';
 import {
   Box,
-  Container,
-  Grid,
   Card,
   CardContent,
   Typography,
   Avatar,
   Stack,
-  LinearProgress,
   Chip,
   IconButton,
   Paper,
@@ -20,6 +17,8 @@ import {
   alpha,
   useTheme,
 } from '@mui/material';
+import Grid from '@mui/material/GridLegacy';
+import { DashboardContent } from '../../layouts/dashboard/main';
 import {
   TrendingUp,
   TrendingDown,
@@ -28,14 +27,10 @@ import {
   DollarSign,
   AlertTriangle,
   Activity,
-  Shield,
-  ArrowUpRight,
   MoreVertical,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import {
-  LineChart,
-  Line,
   AreaChart,
   Area,
   XAxis,
@@ -46,15 +41,13 @@ import {
   PieChart,
   Pie,
   Cell,
-  BarChart,
-  Bar,
 } from 'recharts';
 import { useAdminStore } from '../../store/adminStore';
 
 // ----------------------------------------------------------------------
 
-const MotionCard = motion(Card);
-const MotionBox = motion(Box);
+const MotionCard = motion.create(Card);
+const MotionBox = motion.create(Box);
 
 // ----------------------------------------------------------------------
 
@@ -64,7 +57,8 @@ export const AdminDashboardNew = () => {
 
   useEffect(() => {
     fetchAnalytics();
-  }, [fetchAnalytics]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const stats = [
     {
@@ -144,7 +138,7 @@ export const AdminDashboardNew = () => {
 
   if (isLoading) {
     return (
-      <Container maxWidth="xl">
+      <DashboardContent>
         <Box sx={{ py: 4 }}>
           <Grid container spacing={3}>
             {[1, 2, 3, 4].map((i) => (
@@ -154,12 +148,12 @@ export const AdminDashboardNew = () => {
             ))}
           </Grid>
         </Box>
-      </Container>
+      </DashboardContent>
     );
   }
 
   return (
-    <Container maxWidth="xl">
+    <DashboardContent>
       <Box sx={{ py: 5 }}>
         {/* Header */}
         <MotionBox
@@ -395,7 +389,7 @@ export const AdminDashboardNew = () => {
                 </Stack>
 
                 <Stack spacing={2.5}>
-                  {topProducts.map((product, index) => (
+                  {topProducts.map((product) => (
                     <Paper
                       key={product.name}
                       sx={{
@@ -491,6 +485,6 @@ export const AdminDashboardNew = () => {
           </Grid>
         </Grid>
       </Box>
-    </Container>
+    </DashboardContent>
   );
 };

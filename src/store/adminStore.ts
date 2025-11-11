@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { supabase, handleSupabaseError } from '../lib/supabase';
+import { supabase, supabaseAdmin, handleSupabaseError } from '../lib/supabase';
 import toast from 'react-hot-toast';
 
 interface AdminUser {
@@ -149,33 +149,74 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   fetchUsers: async () => {
     set({ isLoading: true });
     try {
-      const { data: profiles, error } = await supabase
+      // Fetch profiles first using admin client to bypass RLS
+      const { data: profiles, error: profilesError } = await supabaseAdmin
         .from('profiles')
-        .select(`
-          *,
-          user_subscriptions (
-            *,
-            subscription_plans (*)
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) {
-        handleSupabaseError(error);
+      if (profilesError) {
+        handleSupabaseError(profilesError);
         return;
       }
 
-      // Get product counts and revenue for each user
-      const { data: productStats, error: statsError } = await supabase
+      if (!profiles || profiles.length === 0) {
+        set({ users: [] });
+        return;
+      }
+
+      // Fetch user emails from auth.users via profiles.id
+      // Using admin client with service role key
+      const userIds = profiles.map(p => p.id);
+      const userEmails: Record<string, string> = {};
+      
+      try {
+        // Use admin client to fetch user emails
+        const { data: authUsers, error: authError } = await supabaseAdmin.auth.admin.listUsers();
+        if (authError) {
+          console.warn('Error fetching user emails:', authError);
+        } else if (authUsers?.users) {
+          authUsers.users.forEach(user => {
+            if (userIds.includes(user.id)) {
+              userEmails[user.id] = user.email || '';
+            }
+          });
+        }
+      } catch (authErr) {
+        console.warn('Could not fetch user emails from auth:', authErr);
+      }
+
+      // Fetch subscriptions separately using admin client
+      const { data: subscriptions } = await supabaseAdmin
+        .from('user_subscriptions')
+        .select(`
+          user_id,
+          subscription_plans (*)
+        `)
+        .eq('status', 'active')
+        .in('user_id', userIds);
+
+      const subscriptionMap: Record<string, any> = {};
+      if (subscriptions) {
+        subscriptions.forEach(sub => {
+          if (sub.subscription_plans) {
+            subscriptionMap[sub.user_id] = Array.isArray(sub.subscription_plans) 
+              ? sub.subscription_plans[0] 
+              : sub.subscription_plans;
+          }
+        });
+      }
+
+      // Get product counts and revenue for each user using admin client
+      const { data: productStats, error: statsError } = await supabaseAdmin
         .from('products')
         .select('user_id, sales_count, total_revenue');
 
       if (statsError) {
-        handleSupabaseError(statsError);
-        return;
+        console.warn('Error fetching product stats:', statsError);
       }
 
-      const userStats = productStats.reduce((acc: any, product: any) => {
+      const userStats = (productStats || []).reduce((acc: any, product: any) => {
         if (!acc[product.user_id]) {
           acc[product.user_id] = { productCount: 0, totalRevenue: 0 };
         }
@@ -186,13 +227,13 @@ export const useAdminStore = create<AdminState>((set, get) => ({
 
       const users: PlatformUser[] = profiles.map(profile => ({
         id: profile.id,
-        email: profile.email || '',
+        email: userEmails[profile.id] || '',
         username: profile.username,
         firstName: profile.first_name,
         lastName: profile.last_name,
         kycStatus: profile.kyc_status,
         isActive: true, // Assuming all users are active by default
-        subscription: profile.user_subscriptions?.[0]?.subscription_plans,
+        subscription: subscriptionMap[profile.id],
         productCount: userStats[profile.id]?.productCount || 0,
         totalRevenue: userStats[profile.id]?.totalRevenue || 0,
         createdAt: profile.created_at
@@ -200,7 +241,9 @@ export const useAdminStore = create<AdminState>((set, get) => ({
 
       set({ users });
     } catch (error: any) {
+      console.error('Error in fetchUsers:', error);
       toast.error(error.message || 'Failed to fetch users');
+      set({ users: [] });
     } finally {
       set({ isLoading: false });
     }
@@ -209,24 +252,69 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   fetchReports: async () => {
     set({ isLoading: true });
     try {
-      const { data, error } = await supabase
+      // Fetch reports first using admin client to bypass RLS
+      const { data: reportsData, error: reportsError } = await supabaseAdmin
         .from('content_reports')
-        .select(`
-          *,
-          reporter:profiles!reporter_id(email),
-          reported_user:profiles!reported_user_id(email)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) {
-        handleSupabaseError(error);
+      if (reportsError) {
+        console.error('Error fetching reports:', reportsError);
+        // If table doesn't exist, set empty array and continue
+        if (reportsError.message?.includes('does not exist') || reportsError.message?.includes('schema cache')) {
+          set({ reports: [] });
+          return;
+        }
+        handleSupabaseError(reportsError);
         return;
       }
 
-      const reports: ContentReport[] = data.map(report => ({
+      if (!reportsData || reportsData.length === 0) {
+        set({ reports: [] });
+        return;
+      }
+
+      // Fetch reporter and reported user emails separately
+      // Note: profiles table doesn't have email, need to get from auth.users
+      const reporterIds = [...new Set(reportsData.map(r => r.reporter_id).filter(Boolean))];
+      const reportedUserIds = [...new Set(reportsData.map(r => r.reported_user_id).filter(Boolean))];
+      const allUserIds = [...new Set([...reporterIds, ...reportedUserIds])];
+
+      let userEmails: Record<string, string> = {};
+      if (allUserIds.length > 0) {
+        // Use admin client to fetch user emails
+        try {
+          const { data: authUsers, error: authError } = await supabaseAdmin.auth.admin.listUsers();
+          if (authError) {
+            console.warn('Error fetching user emails:', authError);
+          } else if (authUsers?.users) {
+            authUsers.users.forEach(user => {
+              if (allUserIds.includes(user.id)) {
+                userEmails[user.id] = user.email || 'Unknown';
+              }
+            });
+          }
+          // Fallback: set unknown for any missing emails
+          allUserIds.forEach(id => {
+            if (!userEmails[id]) {
+              userEmails[id] = 'Unknown';
+            }
+          });
+        } catch (authErr) {
+          console.warn('Could not fetch user emails from auth:', authErr);
+          // Fallback: use profile IDs as identifiers
+          allUserIds.forEach(id => {
+            if (!userEmails[id]) {
+              userEmails[id] = 'Unknown';
+            }
+          });
+        }
+      }
+
+      const reports: ContentReport[] = reportsData.map(report => ({
         id: report.id,
-        reporterEmail: report.reporter?.email || 'Unknown',
-        reportedUserEmail: report.reported_user?.email || 'Unknown',
+        reporterEmail: report.reporter_id ? (userEmails[report.reporter_id] || 'Unknown') : 'Unknown',
+        reportedUserEmail: report.reported_user_id ? (userEmails[report.reported_user_id] || 'Unknown') : 'Unknown',
         type: report.report_type,
         description: report.description,
         status: report.status,
@@ -237,7 +325,9 @@ export const useAdminStore = create<AdminState>((set, get) => ({
 
       set({ reports });
     } catch (error: any) {
+      console.error('Error in fetchReports:', error);
       toast.error(error.message || 'Failed to fetch reports');
+      set({ reports: [] });
     } finally {
       set({ isLoading: false });
     }
@@ -246,12 +336,12 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   fetchAnalytics: async () => {
     set({ isLoading: true });
     try {
-      // Fetch various analytics data
+      // Fetch various analytics data using admin client to bypass RLS
       const [usersResult, productsResult, transactionsResult, reportsResult] = await Promise.all([
-        supabase.from('profiles').select('id, created_at'),
-        supabase.from('products').select('id, created_at, sales_count, total_revenue'),
-        supabase.from('transactions').select('amount, type, status'),
-        supabase.from('content_reports').select('id, status')
+        supabaseAdmin.from('profiles').select('id, created_at'),
+        supabaseAdmin.from('products').select('id, created_at, sales_count, total_revenue'),
+        supabaseAdmin.from('transactions').select('amount, type, status'),
+        supabaseAdmin.from('content_reports').select('id, status')
       ]);
 
       const users = usersResult.data || [];
@@ -307,7 +397,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
 
   updateReportStatus: async (reportId: string, status: string, notes?: string) => {
     try {
-      const { error } = await supabase
+      const { error } = await supabaseAdmin
         .from('content_reports')
         .update({
           status,
@@ -342,7 +432,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
       const currentAdmin = get().currentAdmin;
       if (!currentAdmin) return;
 
-      const { error } = await supabase
+      const { error } = await supabaseAdmin
         .from('system_logs')
         .insert({
           admin_id: currentAdmin.id,

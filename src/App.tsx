@@ -2,7 +2,9 @@ import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import '@fontsource/public-sans';
-import { ThemeProvider } from './theme/simple-theme';
+import '@fontsource/barlow';
+import { ThemeProvider } from './theme/theme-provider';
+import { SettingsProvider, defaultSettings, SettingsDrawer } from './components/settings';
 import { useAuthStore } from './store/authStore';
 import { useAdminStore } from './store/adminStore';
 import { useProductStore } from './store/productStore';
@@ -11,6 +13,7 @@ import { Layout } from './components/Layout/Layout';
 import { AdminLayout } from './components/admin/AdminLayout';
 import { LoginForm } from './components/Auth/LoginForm';
 import { RegisterForm } from './components/Auth/RegisterForm';
+import { AuthSplitLayout } from './layouts/auth-split';
 import { AdminLogin } from './pages/admin/AdminLogin';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { AdminDashboardNew } from './pages/admin/AdminDashboardNew';
@@ -35,18 +38,36 @@ import { Orders } from './pages/Orders';
 import { KYCVerificationPage } from './pages/KYCVerification';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated } = useAuthStore();
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
+  const { isAuthenticated, isLoading } = useAuthStore();
+  
+  // Wait for auth check to complete before redirecting
+  if (isLoading) {
+    return null; // or a loading spinner
+  }
+  
+  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
 };
 
 const AdminProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated } = useAdminStore();
-  return isAuthenticated ? <>{children}</> : <Navigate to="/admin/login" />;
+  const { isAuthenticated, isLoading } = useAdminStore();
+  
+  // Wait for auth check to complete before redirecting
+  if (isLoading) {
+    return null; // or a loading spinner
+  }
+  
+  return isAuthenticated ? <>{children}</> : <Navigate to="/admin/login" replace />;
 };
 
 const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated } = useAuthStore();
-  return !isAuthenticated ? <>{children}</> : <Navigate to="/dashboard" />;
+  const { isAuthenticated, isLoading } = useAuthStore();
+  
+  // Wait for auth check to complete before redirecting
+  if (isLoading) {
+    return null; // or a loading spinner
+  }
+  
+  return !isAuthenticated ? <>{children}</> : <Navigate to="/dashboard" replace />;
 };
 
 function App() {
@@ -55,16 +76,47 @@ function App() {
   const { fetchPages } = usePageBuilderStore();
   const { globalDesign } = usePageBuilderStore();
 
+  // Force light mode - clear any dark mode preferences from localStorage
+  useEffect(() => {
+    // Clear MUI theme mode storage
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('theme-mode');
+      localStorage.setItem('theme-mode', 'light');
+      
+      // Clear app settings dark mode preference
+      const appSettings = localStorage.getItem('app-settings');
+      if (appSettings) {
+        try {
+          const settings = JSON.parse(appSettings);
+          if (settings.colorScheme === 'dark') {
+            settings.colorScheme = 'light';
+            localStorage.setItem('app-settings', JSON.stringify(settings));
+          }
+        } catch (e) {
+          // Ignore parse errors
+        }
+      }
+      
+      // Force light mode on document
+      document.documentElement.setAttribute('data-mui-color-scheme', 'light');
+      document.documentElement.style.colorScheme = 'light';
+    }
+  }, []);
+
+  // Check auth only once on mount
   useEffect(() => {
     checkAuth();
-  }, [checkAuth]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
+  // Fetch data when authenticated, but only once per auth state change
   useEffect(() => {
     if (isAuthenticated) {
       fetchProducts();
       fetchPages();
     }
-  }, [isAuthenticated, fetchProducts, fetchPages]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]);
 
   // Inject global CSS variables for theming
   useEffect(() => {
@@ -94,21 +146,40 @@ function App() {
   }, [globalDesign]);
 
   return (
-    <ThemeProvider>
-      <Router>
-        <div className="min-h-screen bg-[var(--color-background)]">
+    <SettingsProvider settings={defaultSettings}>
+      <ThemeProvider>
+        <Router
+          future={{
+            v7_startTransition: true,
+            v7_relativeSplatPath: true,
+          }}
+        >
           <Routes>
             <Route path="/" element={<HomeNew />} />
 
             {/* Public Routes */}
             <Route path="/login" element={
               <PublicRoute>
-                <LoginForm />
+                <AuthSplitLayout
+                  section={{
+                    title: 'Welcome back',
+                    subtitle: 'Sign in to your account to continue',
+                  }}
+                >
+                  <LoginForm />
+                </AuthSplitLayout>
               </PublicRoute>
             } />
             <Route path="/register" element={
               <PublicRoute>
-                <RegisterForm />
+                <AuthSplitLayout
+                  section={{
+                    title: 'Get started',
+                    subtitle: 'Create your account to get started',
+                  }}
+                >
+                  <RegisterForm />
+                </AuthSplitLayout>
               </PublicRoute>
             } />
 
@@ -151,9 +222,10 @@ function App() {
             </Route>
           </Routes>
           <Toaster position="top-right" />
-        </div>
-      </Router>
-    </ThemeProvider>
+          <SettingsDrawer hideColorScheme hideNavLayout />
+        </Router>
+      </ThemeProvider>
+    </SettingsProvider>
   );
 }
 

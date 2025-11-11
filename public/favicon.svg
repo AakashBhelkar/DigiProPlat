@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="200" height="200">
+  <rect width="24" height="24" fill="#ffffff" rx="4"/>
+  
+  <!-- Rocket icon matching solar:rocket-2-bold-duotone from Iconify -->
+  <g fill="#1a1f3a">
+    <!-- Rocket body - main triangle -->
+    <path d="M12 2L18 20H6L12 2Z" fill="#1a1f3a" opacity="0.9"/>
+    
+    <!-- Rocket window/circle -->
+    <circle cx="12" cy="10" r="3" fill="#ffffff"/>
+    <circle cx="12" cy="10" r="2" fill="#1a1f3a" opacity="0.2"/>
+    
+    <!-- Rocket fins - left -->
+    <path d="M6 20L4 22L6 22L6 20Z" fill="#1a1f3a" opacity="0.8"/>
+    <!-- Rocket fins - right -->
+    <path d="M18 20L20 22L18 22L18 20Z" fill="#1a1f3a" opacity="0.8"/>
+    
+    <!-- Rocket flames - outer -->
+    <path d="M12 20L9 23L12 24L15 23L12 20Z" fill="#1a1f3a" opacity="0.7"/>
+    <!-- Rocket flames - inner -->
+    <path d="M12 20L10.5 22L12 22.5L13.5 22L12 20Z" fill="#1a1f3a" opacity="0.5"/>
+    
+    <!-- Rocket tip accent -->
+    <circle cx="12" cy="4" r="1" fill="#1a1f3a" opacity="0.6"/>
+  </g>
+</svg>

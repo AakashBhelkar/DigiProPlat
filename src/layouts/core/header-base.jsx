@@ -82,7 +82,14 @@ export function HeaderBase({
         ...slots,
         leftAreaStart: slots?.leftAreaStart,
         leftArea: (
-          <>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: { xs: 1, sm: 2 },
+              flex: '0 0 auto',
+            }}
+          >
             {slots?.leftAreaStart}
 
             {/* -- Menu button -- */}
@@ -91,15 +98,14 @@ export function HeaderBase({
                 data-slot="menu-button"
                 onClick={onOpenNav}
                 sx={{
-                  mr: 1,
-                  ml: -1,
+                  mr: { xs: 0.5, sm: 1 },
                   [theme.breakpoints.up(layoutQuery)]: { display: 'none' },
                 }}
               />
             )}
 
             {/* -- Logo -- */}
-            <Logo data-slot="logo" />
+            <Logo data-slot="logo" width={undefined} height={48} sx={{ mr: { xs: 1, sm: 2 } }} />
 
             {/* -- Divider -- */}
             <StyledDivider data-slot="divider" />
@@ -108,7 +114,7 @@ export function HeaderBase({
             {workspaces && <WorkspacesPopover data-slot="workspaces" data={data?.workspaces} />}
 
             {slots?.leftAreaEnd}
-          </>
+          </Box>
         ),
         rightArea: (
           <>
@@ -120,6 +126,8 @@ export function HeaderBase({
                 display: 'flex',
                 alignItems: 'center',
                 gap: { xs: 1, sm: 1.5 },
+                ml: { xs: 1, sm: 2 },
+                flex: '0 0 auto',
               }}
             >
               {/* -- Help link -- */}

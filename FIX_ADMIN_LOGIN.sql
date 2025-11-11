@@ -1,3 +1,4 @@
+
 -- =====================================================
 -- COMPLETE ADMIN LOGIN FIX
 -- Run this entire script in Supabase SQL Editor

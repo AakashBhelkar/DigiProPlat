@@ -4,10 +4,10 @@ import Tooltip from '@mui/material/Tooltip';
 import { useTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 
-import { RouterLink } from 'src/routes/components';
+import { RouterLink } from '../../routes/components';
 
-import { CONFIG } from 'src/config-global';
-import { varAlpha, bgGradient } from 'src/theme/styles';
+import { CONFIG } from '../../config-global';
+import { varAlpha, bgGradient } from '../../theme/styles';
 
 // ----------------------------------------------------------------------
 

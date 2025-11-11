@@ -58,6 +58,13 @@
   body {
     @apply bg-background text-foreground;
     font-family: 'Inter', sans-serif;
+    background-color: #FFFFFF !important; /* Force white background */
+  }
+  html {
+    background-color: #FFFFFF !important; /* Force white background */
+  }
+  #root {
+    background-color: #FFFFFF !important; /* Force white background */
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Poppins', sans-serif;

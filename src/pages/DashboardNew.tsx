@@ -1,15 +1,12 @@
 import { useEffect, useState } from 'react';
 import {
   Box,
-  Container,
-  Grid,
   Card,
   CardContent,
   Typography,
   Button,
   Avatar,
   Stack,
-  LinearProgress,
   Chip,
   Paper,
   Table,
@@ -23,6 +20,8 @@ import {
   useTheme,
   Skeleton,
 } from '@mui/material';
+import Grid from '@mui/material/GridLegacy';
+import { DashboardContent } from '../layouts/dashboard/main';
 import {
   DollarSign,
   Package,
@@ -55,8 +54,8 @@ import { supabase } from '../lib/supabase';
 
 // ----------------------------------------------------------------------
 
-const MotionCard = motion(Card);
-const MotionBox = motion(Box);
+const MotionCard = motion.create(Card);
+const MotionBox = motion.create(Box);
 
 // ----------------------------------------------------------------------
 
@@ -78,18 +77,18 @@ export function DashboardNew() {
       setLoading(true);
       await fetchProducts();
 
-      // Fetch revenue
-      const { data: revenueData } = await supabase.rpc('get_total_revenue');
-
-      // Fetch transactions for sales count
+      // Fetch transactions for sales count and revenue
       const { data: salesData } = await supabase
         .from('transactions')
         .select('*')
         .eq('type', 'sale')
         .eq('status', 'completed');
 
+      // Calculate total revenue from transactions
+      const totalRevenue = salesData?.reduce((sum, transaction) => sum + (transaction.amount || 0), 0) || 0;
+
       setStats({
-        totalRevenue: (revenueData && typeof revenueData === 'number') ? revenueData : 0,
+        totalRevenue,
         totalProducts: products.length,
         totalViews: products.reduce((sum, p) => sum + (p.views || 0), 0),
         totalSales: salesData?.length || 0,
@@ -99,7 +98,8 @@ export function DashboardNew() {
     };
 
     fetchData();
-  }, [fetchProducts, products.length]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const statCards = [
     {
@@ -158,7 +158,7 @@ export function DashboardNew() {
 
   if (loading) {
     return (
-      <Container maxWidth="xl">
+      <DashboardContent>
         <Box sx={{ py: 5 }}>
           <Grid container spacing={4}>
             {[1, 2, 3, 4].map((i) => (
@@ -168,12 +168,12 @@ export function DashboardNew() {
             ))}
           </Grid>
         </Box>
-      </Container>
+      </DashboardContent>
     );
   }
 
   return (
-    <Container maxWidth="xl">
+    <DashboardContent>
       <Box sx={{ py: 5 }}>
         {/* Header */}
         <MotionBox
@@ -580,6 +580,6 @@ export function DashboardNew() {
           </Grid>
         </Grid>
       </Box>
-    </Container>
+    </DashboardContent>
   );
 }

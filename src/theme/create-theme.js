@@ -1,4 +1,4 @@
-import { experimental_extendTheme as extendTheme } from '@mui/material/styles';
+import { extendTheme } from '@mui/material/styles';
 
 import { setFont } from './styles/utils';
 import { overridesTheme } from './overrides-theme';
@@ -8,16 +8,22 @@ import { updateCoreWithSettings, updateComponentsWithSettings } from './with-set
 // ----------------------------------------------------------------------
 
 export function createTheme(settings) {
+  // Force light mode - remove dark mode completely
+  const forcedSettings = {
+    ...settings,
+    colorScheme: 'light', // Always use light mode
+  };
+  
   const initialTheme = {
     colorSchemes,
-    shadows: shadows(settings.colorScheme),
-    customShadows: customShadows(settings.colorScheme),
-    direction: settings.direction,
+    shadows: shadows('light'), // Always use light shadows
+    customShadows: customShadows('light'), // Always use light shadows
+    direction: forcedSettings.direction,
     shape: { borderRadius: 8 },
     components,
     typography: {
       ...typography,
-      fontFamily: setFont(settings.fontFamily),
+      fontFamily: setFont(forcedSettings.fontFamily),
     },
     cssVarPrefix: '',
     shouldSkipGeneratingVar,
@@ -26,12 +32,12 @@ export function createTheme(settings) {
   /**
    * 1.Update values from settings before creating theme.
    */
-  const updateTheme = updateCoreWithSettings(initialTheme, settings);
+  const updateTheme = updateCoreWithSettings(initialTheme, forcedSettings);
 
   /**
    * 2.Create theme + add locale + update component with settings.
    */
-  const theme = extendTheme(updateTheme, updateComponentsWithSettings(settings), overridesTheme);
+  const theme = extendTheme(updateTheme, updateComponentsWithSettings(forcedSettings), overridesTheme);
 
   return theme;
 }

@@ -46,12 +46,21 @@ export function Dashboard() {
     const fetchStatsAndSales = async () => {
       setLoading(true);
       await fetchProducts();
-      const { data: revenueData } = await supabase.rpc('get_total_revenue');
+      // Fetch transactions for sales count and revenue
       const { data: salesData } = await supabase
         .from('transactions')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(5);
+      
+      // Calculate total revenue from transactions
+      const { data: allSalesData } = await supabase
+        .from('transactions')
+        .select('amount')
+        .eq('type', 'sale')
+        .eq('status', 'completed');
+      
+      const revenueData = allSalesData?.reduce((sum, transaction) => sum + (transaction.amount || 0), 0) || 0;
       setStats([
         {
           title: 'Total Revenue',

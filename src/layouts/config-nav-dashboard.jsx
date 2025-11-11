@@ -1,72 +1,48 @@
-import { paths } from 'src/routes/paths';
-
-import { CONFIG } from 'src/config-global';
-
-import { SvgColor } from 'src/components/svg-color';
+import { Iconify } from '../components/iconify';
 
 // ----------------------------------------------------------------------
 
-const icon = (name) => <SvgColor src={`${CONFIG.site.basePath}/assets/icons/navbar/${name}.svg`} />;
+const icon = (name) => <Iconify icon={name} width={24} />;
 
 const ICONS = {
-  job: icon('ic-job'),
-  blog: icon('ic-blog'),
-  chat: icon('ic-chat'),
-  mail: icon('ic-mail'),
-  user: icon('ic-user'),
-  file: icon('ic-file'),
-  lock: icon('ic-lock'),
-  tour: icon('ic-tour'),
-  order: icon('ic-order'),
-  label: icon('ic-label'),
-  blank: icon('ic-blank'),
-  kanban: icon('ic-kanban'),
-  folder: icon('ic-folder'),
-  course: icon('ic-course'),
-  banking: icon('ic-banking'),
-  booking: icon('ic-booking'),
-  invoice: icon('ic-invoice'),
-  product: icon('ic-product'),
-  calendar: icon('ic-calendar'),
-  disabled: icon('ic-disabled'),
-  external: icon('ic-external'),
-  menuItem: icon('ic-menu-item'),
-  ecommerce: icon('ic-ecommerce'),
-  analytics: icon('ic-analytics'),
-  dashboard: icon('ic-dashboard'),
-  parameter: icon('ic-parameter'),
+  dashboard: icon('solar:chart-2-bold-duotone'),
+  products: icon('solar:box-bold-duotone'),
+  orders: icon('solar:cart-large-2-bold-duotone'),
+  pages: icon('solar:global-bold-duotone'),
+  marketplace: icon('solar:shop-2-bold-duotone'),
+  analytics: icon('solar:chart-bold-duotone'),
+  wallet: icon('solar:wallet-money-bold-duotone'),
+  ai: icon('solar:magic-stick-3-bold-duotone'),
+  kyc: icon('solar:shield-check-bold-duotone'),
+  settings: icon('solar:settings-bold-duotone'),
 };
 
 // ----------------------------------------------------------------------
 
 export const navData = [
-  /**
-   * Overview
-   */
   {
-    subheader: 'Overview 6.0.0',
+    subheader: 'Main',
     items: [
-      { title: 'One', path: paths.dashboard.root, icon: ICONS.dashboard },
-      { title: 'Two', path: paths.dashboard.two, icon: ICONS.ecommerce },
-      { title: 'Three', path: paths.dashboard.three, icon: ICONS.analytics },
+      { title: 'Dashboard', path: '/dashboard', icon: ICONS.dashboard },
+      { title: 'Products', path: '/products', icon: ICONS.products },
+      { title: 'Orders', path: '/orders', icon: ICONS.orders },
+      { title: 'Landing Pages', path: '/pages', icon: ICONS.pages },
+      { title: 'Marketplace', path: '/marketplace', icon: ICONS.marketplace },
     ],
   },
-  /**
-   * Management
-   */
   {
-    subheader: 'Management',
+    subheader: 'Analytics & Tools',
     items: [
-      {
-        title: 'Group',
-        path: paths.dashboard.group.root,
-        icon: ICONS.user,
-        children: [
-          { title: 'Four', path: paths.dashboard.group.root },
-          { title: 'Five', path: paths.dashboard.group.five },
-          { title: 'Six', path: paths.dashboard.group.six },
-        ],
-      },
+      { title: 'Analytics', path: '/analytics', icon: ICONS.analytics },
+      { title: 'Wallet', path: '/wallet', icon: ICONS.wallet },
+      { title: 'AI Assistant', path: '/ai', icon: ICONS.ai },
+      { title: 'KYC Verification', path: '/kyc', icon: ICONS.kyc },
+    ],
+  },
+  {
+    subheader: 'Settings',
+    items: [
+      { title: 'Settings', path: '/settings', icon: ICONS.settings },
     ],
   },
 ];
