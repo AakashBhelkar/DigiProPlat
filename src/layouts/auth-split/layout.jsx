@@ -1,5 +1,3 @@
-import Alert from '@mui/material/Alert';
-
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { Section } from './section';
@@ -34,16 +32,22 @@ export function AuthSplitLayout({ sx, section, children }) {
             menuButton: false,
             localization: false,
             notifications: false,
+            settings: false,
           }}
-          slots={{
-            topArea: (
-              <Alert severity="info" sx={{ display: 'none', borderRadius: 0 }}>
-                This is an info Alert.
-              </Alert>
-            ),
+          slotProps={{
+            container: { maxWidth: false },
+            toolbar: {
+              sx: {
+                backgroundColor: '#FFFFFF',
+                borderBottom: '1px solid #E5E7EB',
+                px: { xs: 2, sm: 3, md: 4 },
+              },
+            },
           }}
-          slotProps={{ container: { maxWidth: false } }}
-          sx={{ position: { [layoutQuery]: 'fixed' } }}
+          sx={{
+            position: { [layoutQuery]: 'fixed' },
+            backgroundColor: '#FFFFFF',
+          }}
         />
       }
       /** **************************************
@@ -53,9 +57,12 @@ export function AuthSplitLayout({ sx, section, children }) {
       /** **************************************
        * Style
        *************************************** */
-      sx={sx}
+      sx={{
+        backgroundColor: '#FFFFFF',
+        ...sx,
+      }}
       cssVars={{
-        '--layout-auth-content-width': '420px',
+        '--layout-auth-content-width': '480px',
       }}
     >
       <Main layoutQuery={layoutQuery}>

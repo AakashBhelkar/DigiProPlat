@@ -16,6 +16,8 @@ export function Main({ sx, children, layoutQuery, ...other }) {
         display: 'flex',
         flex: '1 1 auto',
         flexDirection: 'column',
+        backgroundColor: '#FFFFFF',
+        minHeight: '100vh',
         [theme.breakpoints.up(layoutQuery)]: {
           flexDirection: 'row',
         },
@@ -36,7 +38,7 @@ export function Content({ sx, children, layoutQuery, ...other }) {
   const renderContent = (
     <Box
       sx={{
-        width: 1,
+        width: '100%',
         display: 'flex',
         flexDirection: 'column',
         maxWidth: 'var(--layout-auth-content-width)',
@@ -50,16 +52,19 @@ export function Content({ sx, children, layoutQuery, ...other }) {
     <Box
       className={layoutClasses.content}
       sx={{
-        px: 2,
-        py: 5,
+        px: { xs: 3, sm: 4 },
+        py: { xs: 4, sm: 5 },
         display: 'flex',
         flex: '1 1 auto',
         alignItems: 'center',
         flexDirection: 'column',
         justifyContent: 'center',
+        backgroundColor: '#FFFFFF',
+        width: '100%',
         [theme.breakpoints.up(layoutQuery)]: {
-          px: 0,
-          py: 'calc(var(--layout-header-desktop-height) + 24px)',
+          px: { md: 6, lg: 8 },
+          py: 'calc(var(--layout-header-desktop-height) + 40px)',
+          alignItems: 'flex-start',
         },
         ...sx,
       }}

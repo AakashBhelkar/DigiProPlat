@@ -5,9 +5,9 @@ import { useTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 
 import { RouterLink } from '../../routes/components';
+import { LoginIllustration } from '../../components/illustrations/login-illustration';
 
 import { CONFIG } from '../../config-global';
-import { varAlpha, bgGradient } from '../../theme/styles';
 
 // ----------------------------------------------------------------------
 
@@ -26,22 +26,16 @@ export function Section({
   return (
     <Box
       sx={{
-        ...bgGradient({
-          color: `0deg, ${varAlpha(
-            theme.vars.palette.background.defaultChannel,
-            0.92
-          )}, ${varAlpha(theme.vars.palette.background.defaultChannel, 0.92)}`,
-          imgUrl: `${CONFIG.site.basePath}/assets/background/background-3-blur.webp`,
-        }),
-        px: 3,
+        backgroundColor: '#F8FAFC',
+        px: { xs: 3, md: 5 },
         pb: 3,
         width: 1,
-        maxWidth: 480,
+        maxWidth: { md: 480 },
         display: 'none',
         position: 'relative',
         pt: 'var(--layout-header-desktop-height)',
         [theme.breakpoints.up(layoutQuery)]: {
-          gap: 8,
+          gap: 6,
           display: 'flex',
           alignItems: 'center',
           flexDirection: 'column',
@@ -51,27 +45,62 @@ export function Section({
       }}
       {...other}
     >
-      <div>
-        <Typography variant="h3" sx={{ textAlign: 'center' }}>
+      <Box
+        sx={{
+          textAlign: 'center',
+          maxWidth: 400,
+          mb: 4,
+        }}
+      >
+        <Typography
+          variant="h3"
+          sx={{
+            color: '#1C252E',
+            fontWeight: 700,
+            fontSize: { md: '2.5rem' },
+            lineHeight: 1.2,
+            letterSpacing: '-0.5px',
+            mb: 2,
+          }}
+        >
           {title}
         </Typography>
 
         {subtitle && (
-          <Typography sx={{ color: 'text.secondary', textAlign: 'center', mt: 2 }}>
+          <Typography
+            sx={{
+              color: '#637381',
+              fontSize: '1.125rem',
+              lineHeight: 1.6,
+            }}
+          >
             {subtitle}
           </Typography>
         )}
-      </div>
+      </Box>
 
       <Box
-        component="img"
-        alt="Dashboard illustration"
-        src={imgUrl}
-        sx={{ width: 1, aspectRatio: '4/3', objectFit: 'cover' }}
-      />
+        sx={{
+          width: '100%',
+          maxWidth: 500,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          mt: 2,
+        }}
+      >
+        <LoginIllustration
+          width="100%"
+          height="auto"
+          sx={{
+            maxWidth: 500,
+            filter: 'drop-shadow(0 4px 12px rgba(26, 31, 58, 0.1))',
+          }}
+        />
+      </Box>
 
       {!!methods?.length && method && (
-        <Box component="ul" gap={2} display="flex">
+        <Box component="ul" gap={2} display="flex" sx={{ mt: 4 }}>
           {methods.map((option) => {
             const selected = method === option.label.toLowerCase();
 

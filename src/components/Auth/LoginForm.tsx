@@ -11,6 +11,7 @@ import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import InputAdornment from '@mui/material/InputAdornment';
+import Box from '@mui/material/Box';
 import { useAuthStore } from '../../store/authStore';
 import { Iconify } from '../iconify';
 import { Form, Field } from '../hook-form';
@@ -86,82 +87,228 @@ export const LoginForm: React.FC = () => {
     }
   });
 
-  const renderHead = (
-    <Stack spacing={1.5} sx={{ mb: 5 }}>
-      <Typography variant="h5">Sign in to your account</Typography>
-
-      <Stack direction="row" spacing={0.5}>
-        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          {`Don't have an account?`}
+  return (
+    <Box
+      sx={{
+        width: '100%',
+        maxWidth: 420,
+        mx: 'auto',
+      }}
+    >
+      {/* Header Section */}
+      <Stack spacing={2} sx={{ mb: 5 }}>
+        <Typography
+          variant="h4"
+          sx={{
+            fontWeight: 700,
+            color: '#1C252E',
+            letterSpacing: '-0.5px',
+          }}
+        >
+          Sign in to your account
         </Typography>
 
-        <LinkMui component={Link} to="/register" variant="subtitle2">
-          Get started
-        </LinkMui>
-      </Stack>
-    </Stack>
-  );
-
-  const renderForm = (
-    <Stack spacing={3}>
-      <Field.Text name="email" label="Email address" InputLabelProps={{ shrink: true }} />
-
-      <Stack spacing={1.5}>
-        <LinkMui
-          component={Link}
-          to="#"
-          variant="body2"
-          color="inherit"
-          sx={{ alignSelf: 'flex-end' }}
-        >
-          Forgot password?
-        </LinkMui>
-
-        <Field.Text
-          name="password"
-          label="Password"
-          placeholder="6+ characters"
-          type={showPassword ? 'text' : 'password'}
-          InputLabelProps={{ shrink: true }}
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
-                  <Iconify icon={showPassword ? 'solar:eye-bold' : 'solar:eye-closed-bold'} />
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-        />
+        <Stack direction="row" spacing={0.5} alignItems="center">
+          <Typography variant="body2" sx={{ color: '#637381' }}>
+            Don't have an account?
+          </Typography>
+          <LinkMui
+            component={Link}
+            to="/register"
+            variant="subtitle2"
+            sx={{
+              color: '#1a1f3a',
+              fontWeight: 600,
+              textDecoration: 'none',
+              '&:hover': {
+                textDecoration: 'underline',
+              },
+            }}
+          >
+            Get started
+          </LinkMui>
+        </Stack>
       </Stack>
 
-      <Button
-        fullWidth
-        color="inherit"
-        size="large"
-        type="submit"
-        variant="contained"
-        disabled={isSubmitting || isLoading}
-        startIcon={isSubmitting || isLoading ? <CircularProgress size={20} /> : null}
-      >
-        {isSubmitting || isLoading ? 'Signing in...' : 'Sign in'}
-      </Button>
-    </Stack>
-  );
-
-  return (
-    <>
-      {renderHead}
-
+      {/* Error Message */}
       {!!errorMsg && (
-        <Alert severity="error" sx={{ mb: 3 }}>
+        <Alert
+          severity="error"
+          sx={{
+            mb: 3,
+            borderRadius: 2,
+            backgroundColor: '#FEE4E2',
+            color: '#D92D20',
+            '& .MuiAlert-icon': {
+              color: '#D92D20',
+            },
+          }}
+        >
           {errorMsg}
         </Alert>
       )}
 
+      {/* Form */}
       <Form methods={methods} onSubmit={onSubmit}>
-        {renderForm}
+        <Stack spacing={3}>
+          {/* Email Field */}
+          <Field.Text
+            name="email"
+            label="Email address"
+            InputLabelProps={{ shrink: true }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                backgroundColor: '#FFFFFF',
+                borderRadius: 2,
+                '& fieldset': {
+                  borderColor: '#E5E7EB',
+                },
+                '&:hover fieldset': {
+                  borderColor: '#9CA3AF',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#1a1f3a',
+                  borderWidth: 2,
+                },
+              },
+              '& .MuiInputLabel-root': {
+                color: '#637381',
+                '&.Mui-focused': {
+                  color: '#1a1f3a',
+                },
+              },
+              '& .MuiInputBase-input': {
+                color: '#1C252E',
+                '&::placeholder': {
+                  color: '#9CA3AF',
+                  opacity: 1,
+                },
+              },
+            }}
+          />
+
+          {/* Password Field */}
+          <Stack spacing={1.5}>
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              alignItems="center"
+            >
+              <Box /> {/* Spacer */}
+              <LinkMui
+                component={Link}
+                to="#"
+                variant="body2"
+                sx={{
+                  color: '#1a1f3a',
+                  fontWeight: 500,
+                  textDecoration: 'none',
+                  fontSize: '0.875rem',
+                  '&:hover': {
+                    textDecoration: 'underline',
+                  },
+                }}
+              >
+                Forgot password?
+              </LinkMui>
+            </Stack>
+
+            <Field.Text
+              name="password"
+              label="Password"
+              placeholder="6+ characters"
+              type={showPassword ? 'text' : 'password'}
+              InputLabelProps={{ shrink: true }}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setShowPassword(!showPassword)}
+                      edge="end"
+                      sx={{
+                        color: '#637381',
+                        '&:hover': {
+                          backgroundColor: 'transparent',
+                          color: '#1a1f3a',
+                        },
+                      }}
+                    >
+                      <Iconify
+                        icon={showPassword ? 'solar:eye-bold' : 'solar:eye-closed-bold'}
+                        width={20}
+                      />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: 2,
+                  '& fieldset': {
+                    borderColor: '#E5E7EB',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: '#9CA3AF',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#1a1f3a',
+                    borderWidth: 2,
+                  },
+                },
+                '& .MuiInputLabel-root': {
+                  color: '#637381',
+                  '&.Mui-focused': {
+                    color: '#1a1f3a',
+                  },
+                },
+                '& .MuiInputBase-input': {
+                  color: '#1C252E',
+                  '&::placeholder': {
+                    color: '#9CA3AF',
+                    opacity: 1,
+                  },
+                },
+              }}
+            />
+          </Stack>
+
+          {/* Submit Button */}
+          <Button
+            fullWidth
+            size="large"
+            type="submit"
+            variant="contained"
+            disabled={isSubmitting || isLoading}
+            sx={{
+              mt: 2,
+              py: 1.5,
+              backgroundColor: '#1a1f3a',
+              color: '#FFFFFF',
+              fontWeight: 600,
+              fontSize: '1rem',
+              borderRadius: 2,
+              textTransform: 'none',
+              boxShadow: '0 2px 8px rgba(26, 31, 58, 0.15)',
+              '&:hover': {
+                backgroundColor: '#2d3550',
+                boxShadow: '0 4px 12px rgba(26, 31, 58, 0.25)',
+              },
+              '&:disabled': {
+                backgroundColor: '#9CA3AF',
+                color: '#FFFFFF',
+              },
+            }}
+            startIcon={
+              isSubmitting || isLoading ? (
+                <CircularProgress size={20} sx={{ color: '#FFFFFF' }} />
+              ) : null
+            }
+          >
+            {isSubmitting || isLoading ? 'Signing in...' : 'Sign in'}
+          </Button>
+        </Stack>
       </Form>
-    </>
+    </Box>
   );
 };
