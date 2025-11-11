@@ -172,13 +172,18 @@ export const LoginForm: React.FC = () => {
                 },
               },
               '& .MuiInputLabel-root': {
-                color: '#637381',
+                color: '#1C252E',
+                fontSize: '0.9375rem',
+                fontWeight: 500,
                 '&.Mui-focused': {
                   color: '#1a1f3a',
+                  fontWeight: 600,
                 },
               },
               '& .MuiInputBase-input': {
                 color: '#1C252E',
+                fontSize: '0.9375rem',
+                fontWeight: 400,
                 '&::placeholder': {
                   color: '#9CA3AF',
                   opacity: 1,
@@ -257,9 +262,12 @@ export const LoginForm: React.FC = () => {
                   },
                 },
                 '& .MuiInputLabel-root': {
-                  color: '#637381',
+                  color: '#1C252E',
+                  fontSize: '0.9375rem',
+                  fontWeight: 500,
                   '&.Mui-focused': {
                     color: '#1a1f3a',
+                    fontWeight: 600,
                   },
                 },
                 '& .MuiInputBase-input': {

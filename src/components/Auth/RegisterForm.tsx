@@ -11,6 +11,7 @@ import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import InputAdornment from '@mui/material/InputAdornment';
+import Box from '@mui/material/Box';
 import { useAuthStore } from '../../store/authStore';
 import { Iconify } from '../iconify';
 import { Form, Field } from '../hook-form';
@@ -36,6 +37,43 @@ const SignUpSchema = zod.object({
   message: "Passwords don't match",
   path: ['confirmPassword'],
 });
+
+// ----------------------------------------------------------------------
+
+const fieldStyles = {
+  '& .MuiOutlinedInput-root': {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 2,
+    '& fieldset': {
+      borderColor: '#E5E7EB',
+    },
+    '&:hover fieldset': {
+      borderColor: '#9CA3AF',
+    },
+    '&.Mui-focused fieldset': {
+      borderColor: '#1a1f3a',
+      borderWidth: 2,
+    },
+  },
+  '& .MuiInputLabel-root': {
+    color: '#1C252E',
+    fontSize: '0.9375rem',
+    fontWeight: 500,
+    '&.Mui-focused': {
+      color: '#1a1f3a',
+      fontWeight: 600,
+    },
+  },
+  '& .MuiInputBase-input': {
+    color: '#1C252E',
+    fontSize: '0.9375rem',
+    fontWeight: 400,
+    '&::placeholder': {
+      color: '#9CA3AF',
+      opacity: 1,
+    },
+  },
+};
 
 // ----------------------------------------------------------------------
 
@@ -87,118 +125,256 @@ export const RegisterForm: React.FC = () => {
     }
   });
 
-  const renderHead = (
-    <Stack spacing={1.5} sx={{ mb: 5 }}>
-      <Typography variant="h5">Get started absolutely free</Typography>
-
-      <Stack direction="row" spacing={0.5}>
-        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          Already have an account?
-        </Typography>
-
-        <LinkMui component={Link} to="/login" variant="subtitle2">
-          Sign in
-        </LinkMui>
-      </Stack>
-    </Stack>
-  );
-
-  const renderForm = (
-    <Stack spacing={3}>
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-        <Field.Text name="firstName" label="First name" InputLabelProps={{ shrink: true }} />
-        <Field.Text name="lastName" label="Last name" InputLabelProps={{ shrink: true }} />
-      </Stack>
-
-      <Field.Text name="username" label="Username" InputLabelProps={{ shrink: true }} />
-
-      <Field.Text name="email" label="Email address" InputLabelProps={{ shrink: true }} />
-
-      <Field.Text
-        name="password"
-        label="Password"
-        placeholder="8+ characters"
-        type={showPassword ? 'text' : 'password'}
-        InputLabelProps={{ shrink: true }}
-        InputProps={{
-          endAdornment: (
-            <InputAdornment position="end">
-              <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
-                <Iconify icon={showPassword ? 'solar:eye-bold' : 'solar:eye-closed-bold'} />
-              </IconButton>
-            </InputAdornment>
-          ),
-        }}
-      />
-
-      <Field.Text
-        name="confirmPassword"
-        label="Confirm Password"
-        placeholder="Confirm your password"
-        type={showConfirmPassword ? 'text' : 'password'}
-        InputLabelProps={{ shrink: true }}
-        InputProps={{
-          endAdornment: (
-            <InputAdornment position="end">
-              <IconButton onClick={() => setShowConfirmPassword(!showConfirmPassword)} edge="end">
-                <Iconify icon={showConfirmPassword ? 'solar:eye-bold' : 'solar:eye-closed-bold'} />
-              </IconButton>
-            </InputAdornment>
-          ),
-        }}
-      />
-
-      <Button
-        fullWidth
-        color="inherit"
-        size="large"
-        type="submit"
-        variant="contained"
-        disabled={isSubmitting || isLoading}
-        startIcon={isSubmitting || isLoading ? <CircularProgress size={20} /> : null}
-      >
-        {isSubmitting || isLoading ? 'Creating account...' : 'Create account'}
-      </Button>
-    </Stack>
-  );
-
-  const renderTerms = (
-    <Typography
-      component="div"
+  return (
+    <Box
       sx={{
-        mt: 3,
-        textAlign: 'center',
-        typography: 'caption',
-        color: 'text.secondary',
+        width: '100%',
+        maxWidth: 480,
+        mx: 'auto',
       }}
     >
-      {'By signing up, I agree to '}
-      <LinkMui underline="always" color="text.primary" component={Link} to="#">
-        Terms of service
-      </LinkMui>
-      {' and '}
-      <LinkMui underline="always" color="text.primary" component={Link} to="#">
-        Privacy policy
-      </LinkMui>
-      .
-    </Typography>
-  );
+      {/* Header Section */}
+      <Stack spacing={2} sx={{ mb: 5 }}>
+        <Typography
+          variant="h4"
+          sx={{
+            fontWeight: 700,
+            color: '#1C252E',
+            letterSpacing: '-0.5px',
+          }}
+        >
+          Get started absolutely free
+        </Typography>
 
-  return (
-    <>
-      {renderHead}
+        <Stack direction="row" spacing={0.5} alignItems="center">
+          <Typography variant="body2" sx={{ color: '#637381' }}>
+            Already have an account?
+          </Typography>
+          <LinkMui
+            component={Link}
+            to="/login"
+            variant="subtitle2"
+            sx={{
+              color: '#1a1f3a',
+              fontWeight: 600,
+              textDecoration: 'none',
+              '&:hover': {
+                textDecoration: 'underline',
+              },
+            }}
+          >
+            Sign in
+          </LinkMui>
+        </Stack>
+      </Stack>
 
+      {/* Error Message */}
       {!!errorMsg && (
-        <Alert severity="error" sx={{ mb: 3 }}>
+        <Alert
+          severity="error"
+          sx={{
+            mb: 3,
+            borderRadius: 2,
+            backgroundColor: '#FEE4E2',
+            color: '#D92D20',
+            '& .MuiAlert-icon': {
+              color: '#D92D20',
+            },
+          }}
+        >
           {errorMsg}
         </Alert>
       )}
 
+      {/* Form */}
       <Form methods={methods} onSubmit={onSubmit}>
-        {renderForm}
+        <Stack spacing={3}>
+          {/* First Name and Last Name - Side by Side */}
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            spacing={2}
+            sx={{
+              '& > *': {
+                flex: { sm: 1 },
+              },
+            }}
+          >
+            <Field.Text
+              name="firstName"
+              label="First name"
+              InputLabelProps={{ shrink: true }}
+              sx={fieldStyles}
+            />
+            <Field.Text
+              name="lastName"
+              label="Last name"
+              InputLabelProps={{ shrink: true }}
+              sx={fieldStyles}
+            />
+          </Stack>
+
+          {/* Username */}
+          <Field.Text
+            name="username"
+            label="Username"
+            InputLabelProps={{ shrink: true }}
+            sx={fieldStyles}
+          />
+
+          {/* Email */}
+          <Field.Text
+            name="email"
+            label="Email address"
+            InputLabelProps={{ shrink: true }}
+            sx={fieldStyles}
+          />
+
+          {/* Password */}
+          <Field.Text
+            name="password"
+            label="Password"
+            placeholder="8+ characters"
+            type={showPassword ? 'text' : 'password'}
+            InputLabelProps={{ shrink: true }}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={() => setShowPassword(!showPassword)}
+                    edge="end"
+                    sx={{
+                      color: '#637381',
+                      '&:hover': {
+                        backgroundColor: 'transparent',
+                        color: '#1a1f3a',
+                      },
+                    }}
+                  >
+                    <Iconify
+                      icon={showPassword ? 'solar:eye-bold' : 'solar:eye-closed-bold'}
+                      width={20}
+                    />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+            sx={fieldStyles}
+          />
+
+          {/* Confirm Password */}
+          <Field.Text
+            name="confirmPassword"
+            label="Confirm Password"
+            placeholder="Confirm your password"
+            type={showConfirmPassword ? 'text' : 'password'}
+            InputLabelProps={{ shrink: true }}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    edge="end"
+                    sx={{
+                      color: '#637381',
+                      '&:hover': {
+                        backgroundColor: 'transparent',
+                        color: '#1a1f3a',
+                      },
+                    }}
+                  >
+                    <Iconify
+                      icon={showConfirmPassword ? 'solar:eye-bold' : 'solar:eye-closed-bold'}
+                      width={20}
+                    />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+            sx={fieldStyles}
+          />
+
+          {/* Submit Button */}
+          <Button
+            fullWidth
+            size="large"
+            type="submit"
+            variant="contained"
+            disabled={isSubmitting || isLoading}
+            sx={{
+              mt: 2,
+              py: 1.5,
+              backgroundColor: '#1a1f3a',
+              color: '#FFFFFF',
+              fontWeight: 600,
+              fontSize: '1rem',
+              borderRadius: 2,
+              textTransform: 'none',
+              boxShadow: '0 2px 8px rgba(26, 31, 58, 0.15)',
+              '&:hover': {
+                backgroundColor: '#2d3550',
+                boxShadow: '0 4px 12px rgba(26, 31, 58, 0.25)',
+              },
+              '&:disabled': {
+                backgroundColor: '#9CA3AF',
+                color: '#FFFFFF',
+              },
+            }}
+            startIcon={
+              isSubmitting || isLoading ? (
+                <CircularProgress size={20} sx={{ color: '#FFFFFF' }} />
+              ) : null
+            }
+          >
+            {isSubmitting || isLoading ? 'Creating account...' : 'Create account'}
+          </Button>
+        </Stack>
       </Form>
 
-      {renderTerms}
-    </>
+      {/* Terms and Conditions */}
+      <Typography
+        component="div"
+        sx={{
+          mt: 4,
+          textAlign: 'center',
+          fontSize: '0.875rem',
+          color: '#637381',
+          lineHeight: 1.6,
+        }}
+      >
+        {'By signing up, I agree to '}
+        <LinkMui
+          underline="always"
+          component={Link}
+          to="#"
+          sx={{
+            color: '#1a1f3a',
+            fontWeight: 500,
+            textDecoration: 'none',
+            '&:hover': {
+              textDecoration: 'underline',
+            },
+          }}
+        >
+          Terms of service
+        </LinkMui>
+        {' and '}
+        <LinkMui
+          underline="always"
+          component={Link}
+          to="#"
+          sx={{
+            color: '#1a1f3a',
+            fontWeight: 500,
+            textDecoration: 'none',
+            '&:hover': {
+              textDecoration: 'underline',
+            },
+          }}
+        >
+          Privacy policy
+        </LinkMui>
+        .
+      </Typography>
+    </Box>
   );
 };
