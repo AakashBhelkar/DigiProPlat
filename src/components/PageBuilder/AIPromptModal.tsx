@@ -94,7 +94,7 @@ export const AIPromptModal: React.FC<AIPromptModalProps> = ({
             type="text"
             value={prompt}
             onChange={e => setPrompt(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md mb-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md mb-2 focus:ring-2 focus:ring-primary focus:border-primary"
             placeholder="e.g. Generate a hero section for a SaaS product..."
             aria-label="AI prompt"
             required
@@ -104,7 +104,7 @@ export const AIPromptModal: React.FC<AIPromptModalProps> = ({
               <button
                 key={t.label}
                 type="button"
-                className="px-2 py-1 text-xs rounded bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200"
+                className="px-2 py-1 text-xs rounded bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30"
                 onClick={() => handleTemplate(t.value)}
                 tabIndex={0}
               >{t.label}</button>
@@ -126,7 +126,7 @@ export const AIPromptModal: React.FC<AIPromptModalProps> = ({
           )}
           <button
             type="button"
-            className="text-xs text-indigo-600 underline mb-2"
+            className="text-xs text-primary underline mb-2"
             onClick={() => setShowAdvanced(v => !v)}
             aria-expanded={showAdvanced}
           >{showAdvanced ? 'Hide' : 'Show'} advanced options</button>
@@ -160,7 +160,7 @@ export const AIPromptModal: React.FC<AIPromptModalProps> = ({
                   max={10}
                   value={numSections}
                   onChange={e => setNumSections(Number(e.target.value))}
-                  className="flex-1 accent-indigo-500"
+                  className="flex-1 accent-primary"
                   aria-label="Number of sections slider"
                 />
               </div>
@@ -180,7 +180,7 @@ export const AIPromptModal: React.FC<AIPromptModalProps> = ({
           <div className="flex items-center gap-2 mt-4">
             <button
               type="submit"
-              className="flex-1 px-4 py-2 rounded-lg font-bold shadow bg-indigo-600 text-white hover:bg-indigo-700 transition-colors disabled:opacity-50"
+              className="flex-1 px-4 py-2 rounded-lg font-bold shadow bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
               disabled={isGenerating}
             >{isGenerating ? 'Generating…' : 'Generate'}</button>
             <button

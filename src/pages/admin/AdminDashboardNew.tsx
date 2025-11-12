@@ -220,7 +220,7 @@ export const AdminDashboardNew = () => {
                       label={stat.percentage}
                       size="medium"
                       color={stat.trend === 'up' ? 'success' : 'error'}
-                      sx={{ fontWeight: 700, fontSize: '0.875rem', px: 1 }}
+                      sx={{ fontWeight: 700, fontSize: '0.875rem', px: 1, color: 'primary.main' }}
                     />
                   </Stack>
 

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-mui-color-scheme="light" style="color-scheme: light;">
+<html lang="en" data-mui-color-scheme="light" style="color-scheme: light; --color-primary: #14b8a6; --color-secondary: #10b981; --color-accent: #f59e42; --color-background: #f0fdfa; --color-text: #134e4a; --color-success: #10b981; --color-warning: #facc15; --color-error: #ef4444; --button-color: #14b8a6; --button-hover-color: #0d9488; --button-font: Inter, sans-serif; --button-shadow: 0 2px 8px rgba(0,0,0,0.10); --button-border-radius: 8px; --button-border-color: #14b8a6; --button-border-width: 1px; --global-background: #f0fdfa; --global-text: #134e4a;">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -27,32 +27,64 @@
             }
           }
           
-          // Force light mode on document
-          document.documentElement.setAttribute('data-mui-color-scheme', 'light');
-          document.documentElement.style.colorScheme = 'light';
+          // Force light mode on document with custom CSS variables
+          if (document.documentElement) {
+            document.documentElement.setAttribute('data-mui-color-scheme', 'light');
+            document.documentElement.style.colorScheme = 'light';
+            
+            // Set custom CSS variables for the color scheme
+            document.documentElement.style.setProperty('--color-primary', '#14b8a6');
+            document.documentElement.style.setProperty('--color-secondary', '#10b981');
+            document.documentElement.style.setProperty('--color-accent', '#f59e42');
+            document.documentElement.style.setProperty('--color-background', '#f0fdfa');
+            document.documentElement.style.setProperty('--color-text', '#134e4a');
+            document.documentElement.style.setProperty('--color-success', '#10b981');
+            document.documentElement.style.setProperty('--color-warning', '#facc15');
+            document.documentElement.style.setProperty('--color-error', '#ef4444');
+            document.documentElement.style.setProperty('--button-color', '#14b8a6');
+            document.documentElement.style.setProperty('--button-hover-color', '#0d9488');
+            document.documentElement.style.setProperty('--button-font', 'Inter, sans-serif');
+            document.documentElement.style.setProperty('--button-shadow', '0 2px 8px rgba(0,0,0,0.10)');
+            document.documentElement.style.setProperty('--button-border-radius', '8px');
+            document.documentElement.style.setProperty('--button-border-color', '#14b8a6');
+            document.documentElement.style.setProperty('--button-border-width', '1px');
+            document.documentElement.style.setProperty('--global-background', '#f0fdfa');
+            document.documentElement.style.setProperty('--global-text', '#134e4a');
+          }
+          
+          // Set light background on body and root
+          if (document.body) {
+            document.body.style.backgroundColor = '#f0fdfa';
+          }
+          const root = document.getElementById('root');
+          if (root) {
+            root.style.backgroundColor = '#f0fdfa';
+          }
           
           // Monitor and prevent any dark mode changes
-          const observer = new MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
-              if (mutation.type === 'attributes' && mutation.attributeName === 'data-mui-color-scheme') {
-                if (document.documentElement.getAttribute('data-mui-color-scheme') !== 'light') {
-                  document.documentElement.setAttribute('data-mui-color-scheme', 'light');
-                  localStorage.setItem('theme-mode', 'light');
+          if (document.documentElement) {
+            const observer = new MutationObserver(function(mutations) {
+              mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'data-mui-color-scheme') {
+                  if (document.documentElement && document.documentElement.getAttribute('data-mui-color-scheme') !== 'light') {
+                    document.documentElement.setAttribute('data-mui-color-scheme', 'light');
+                    localStorage.setItem('theme-mode', 'light');
+                  }
                 }
-              }
+              });
             });
-          });
-          
-          observer.observe(document.documentElement, {
-            attributes: true,
-            attributeFilter: ['data-mui-color-scheme']
-          });
+            
+            observer.observe(document.documentElement, {
+              attributes: true,
+              attributeFilter: ['data-mui-color-scheme']
+            });
+          }
         }
       })();
     </script>
   </head>
-  <body>
-    <div id="root"></div>
+  <body style="background-color: #f0fdfa;">
+    <div id="root" style="background-color: rgb(240, 253, 250);"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

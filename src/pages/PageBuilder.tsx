@@ -225,7 +225,7 @@ export const PageBuilder: React.FC = () => {
   return (
     <div className="min-h-screen bg-white dark:bg-white">
       {/* Builder Toolbar/Header */}
-      <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg shadow-card p-6 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b-4 border-primary-500/30">
+      <div className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-lg shadow-card p-6 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b-4 border-primary/30">
         <div className="flex flex-col gap-1 text-left">
           <h1 className="text-2xl font-bold text-white">Landing Page Builder</h1>
           <p className="text-white text-sm">Design and preview your high-converting landing page</p>
@@ -519,7 +519,7 @@ export const PageBuilder: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" role="dialog" aria-modal="true" tabIndex={-1}>
           <div className="bg-background rounded-xl shadow-2xl max-w-2xl w-full p-0 relative animate-fade-in flex flex-col focus:outline-none" tabIndex={0} aria-label="AI-Generated Sections Preview">
             {/* Header */}
-            <div className="flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-t-xl">
+            <div className="flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-primary to-primary/80 rounded-t-xl">
               <span className="text-2xl text-white" role="img" aria-label="sparkles">✨</span>
               <div className="flex-1">
                 <h3 className="text-lg font-bold text-white">AI-Generated Sections Preview</h3>
@@ -589,7 +589,7 @@ export const PageBuilder: React.FC = () => {
         <div className="fixed inset-0 z-50 flex">
           <div className="w-96 bg-white border-l border-gray-200 shadow-2xl flex flex-col h-full">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-              <h3 className="text-lg font-bold text-indigo-700">Global Design</h3>
+              <h3 className="text-lg font-bold text-primary">Global Design</h3>
               <Button onClick={() => setShowDesignSidebar(false)} className="text-gray-400 hover:text-gray-600 p-2 rounded-md">
                 <span className="sr-only">Close</span>✕
               </Button>
@@ -611,9 +611,9 @@ export const PageBuilder: React.FC = () => {
                   <Info className="h-4 w-4 text-gray-400" title="This preview uses your global typography and color settings." />
                   {/* Preview device toggles */}
                   <div className="ml-auto flex gap-1" role="group" aria-label="Preview device toggles">
-                    <Button aria-label="Desktop preview" className={`p-1 rounded ${previewDevice==='desktop'?'bg-indigo-100':'hover:bg-gray-100'}`} onClick={()=>setPreviewDevice('desktop')}><Monitor className="h-4 w-4" /></Button>
-                    <Button aria-label="Tablet preview" className={`p-1 rounded ${previewDevice==='tablet'?'bg-indigo-100':'hover:bg-gray-100'}`} onClick={()=>setPreviewDevice('tablet')}><Tablet className="h-4 w-4" /></Button>
-                    <Button aria-label="Mobile preview" className={`p-1 rounded ${previewDevice==='mobile'?'bg-indigo-100':'hover:bg-gray-100'}`} onClick={()=>setPreviewDevice('mobile')}><Smartphone className="h-4 w-4" /></Button>
+                    <Button aria-label="Desktop preview" className={`p-1 rounded ${previewDevice==='desktop'?'bg-primary/20':'hover:bg-gray-100'}`} onClick={()=>setPreviewDevice('desktop')}><Monitor className="h-4 w-4" /></Button>
+                    <Button aria-label="Tablet preview" className={`p-1 rounded ${previewDevice==='tablet'?'bg-primary/20':'hover:bg-gray-100'}`} onClick={()=>setPreviewDevice('tablet')}><Tablet className="h-4 w-4" /></Button>
+                    <Button aria-label="Mobile preview" className={`p-1 rounded ${previewDevice==='mobile'?'bg-primary/20':'hover:bg-gray-100'}`} onClick={()=>setPreviewDevice('mobile')}><Smartphone className="h-4 w-4" /></Button>
                   </div>
                 </div>
                 <div className={`rounded-xl border border-gray-100 shadow-md p-4 mb-2 bg-white transition-all duration-300 ${globalDesign.globalShadow !== 'none' ? `shadow-${globalDesign.globalShadow}` : ''}`}
@@ -654,7 +654,7 @@ export const PageBuilder: React.FC = () => {
               {/* Fonts */}
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <Type className="h-5 w-5 text-indigo-500" />
+                  <Type className="h-5 w-5 text-primary" />
                   <h4 className="font-semibold text-gray-800">Fonts</h4>
                   <Info className="h-4 w-4 text-gray-400 ml-1" title="Set global font families, sizes, and weights. These settings affect all headings and body text by default. Use accessible font sizes and weights for readability." />
                 </div>
@@ -770,7 +770,7 @@ export const PageBuilder: React.FC = () => {
                 </div>
                 <div className="text-xs text-gray-400 mt-1">Tip: Use font controls to match your brand typography.</div>
               </div>
-              <hr className="my-4 border-indigo-100" />
+              <hr className="my-4 border-primary/20" />
               {/* Color Palette */}
               <div>
                 <div className="flex items-center gap-2 mb-2">
@@ -1042,7 +1042,7 @@ export const PageBuilder: React.FC = () => {
               </Button>
               <Button
                 onClick={() => setShowDesignSidebar(false)}
-                className="px-6 py-2 rounded-lg font-bold shadow bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
+                className="px-6 py-2 rounded-lg font-bold shadow bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
                 aria-label="Close design sidebar"
               >
                 Done

@@ -60,47 +60,146 @@ export const Analytics: React.FC = () => {
     const fetchAnalytics = async () => {
       setLoading(true);
       try {
-        // Fetch revenue
-        const { data: revenue } = await supabase.from('revenue').select('*');
-        setRevenueData((revenue as RevenueDatum[]) || []);
+        // Calculate date range based on timeRange
+        const now = new Date();
+        let startDate = new Date();
+        switch (timeRange) {
+          case '7d':
+            startDate.setDate(now.getDate() - 7);
+            break;
+          case '30d':
+            startDate.setDate(now.getDate() - 30);
+            break;
+          case '90d':
+            startDate.setDate(now.getDate() - 90);
+            break;
+          case '1y':
+            startDate.setFullYear(now.getFullYear() - 1);
+            break;
+          default:
+            startDate.setDate(now.getDate() - 7);
+        }
 
-        // Fetch traffic
-        const { data: traffic } = await supabase.from('traffic').select('*');
-        setTrafficData((traffic as TrafficDatum[]) || []);
+        // Fetch revenue from transactions table (type = 'sale')
+        const { data: transactions } = await supabase
+          .from('transactions')
+          .select('amount, created_at, type')
+          .eq('type', 'sale')
+          .eq('status', 'completed')
+          .gte('created_at', startDate.toISOString())
+          .order('created_at', { ascending: true });
 
-        // Fetch categories
-        const { data: categories } = await supabase.from('categories').select('*');
-        setCategoryData((categories as CategoryDatum[]) || []);
+        // Group revenue by date
+        const revenueMap = new Map<string, { revenue: number; orders: number }>();
+        if (transactions) {
+          transactions.forEach((tx) => {
+            const date = new Date(tx.created_at).toISOString().split('T')[0];
+            const existing = revenueMap.get(date) || { revenue: 0, orders: 0 };
+            revenueMap.set(date, {
+              revenue: existing.revenue + Number(tx.amount || 0),
+              orders: existing.orders + 1,
+            });
+          });
+        }
+        const revenueArray: RevenueDatum[] = Array.from(revenueMap.entries()).map(([date, data]) => ({
+          date,
+          revenue: data.revenue,
+          orders: data.orders,
+        }));
+        setRevenueData(revenueArray);
+
+        // Fetch traffic from products (view_count column doesn't exist, use product count as traffic)
+        const { data: products } = await supabase
+          .from('products')
+          .select('id, created_at')
+          .gte('created_at', startDate.toISOString())
+          .order('created_at', { ascending: true });
+
+        // Group views by date (using product count as traffic metric)
+        const trafficMap = new Map<string, { views: number; visitors: number }>();
+        if (products) {
+          products.forEach((product) => {
+            const date = new Date(product.created_at).toISOString().split('T')[0];
+            const existing = trafficMap.get(date) || { views: 0, visitors: 0 };
+            trafficMap.set(date, {
+              views: existing.views + 1, // Each product represents a view
+              visitors: existing.visitors + 1, // Each product represents a visitor
+            });
+          });
+        }
+        const trafficArray: TrafficDatum[] = Array.from(trafficMap.entries()).map(([date, data]) => ({
+          date,
+          views: data.views,
+          visitors: data.visitors,
+        }));
+        setTrafficData(trafficArray);
+
+        // Fetch categories from products aggregation
+        const { data: categoryProducts } = await supabase
+          .from('products')
+          .select('category, total_revenue, sales_count');
+
+        // Aggregate by category
+        const categoryMap = new Map<string, number>();
+        if (categoryProducts) {
+          categoryProducts.forEach((product) => {
+            const category = product.category || 'Uncategorized';
+            const existing = categoryMap.get(category) || 0;
+            categoryMap.set(category, existing + Number(product.total_revenue || 0));
+          });
+        }
+
+        // Generate colors for categories
+        const colors = [
+          '#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#0088fe',
+          '#00c49f', '#ffbb28', '#ff8042', '#8dd1e1', '#d084d0',
+        ];
+        const categoryArray: CategoryDatum[] = Array.from(categoryMap.entries()).map(([name, value], index) => ({
+          name,
+          value,
+          color: colors[index % colors.length],
+        }));
+        setCategoryData(categoryArray);
 
         // Fetch top products
-        const { data: top } = await supabase.from('products').select('name, total_revenue:revenue, sales_count:sales');
-        setTopProducts((top as TopProduct[]) || []);
+        const { data: topProductsData } = await supabase
+          .from('products')
+          .select('title, total_revenue, sales_count')
+          .order('total_revenue', { ascending: false })
+          .limit(10);
 
-        // Update stats
-        if (revenue && Array.isArray(revenue)) {
-          const totalRevenue = revenue.reduce((acc, cur) => acc + (cur.revenue || 0), 0);
-          const totalOrders = revenue.reduce((acc, cur) => acc + (cur.orders || 0), 0);
-          setStats([
-            {
-              title: 'Total Revenue',
-              value: `$${totalRevenue.toLocaleString()}`,
-              icon: 'solar:dollar-bold-duotone',
-              color: 'success.main',
-            },
-            {
-              title: 'Total Orders',
-              value: `${totalOrders}`,
-              icon: 'solar:cart-large-2-bold-duotone',
-              color: 'primary.main',
-            },
-            {
-              title: 'Total Views',
-              value: traffic && Array.isArray(traffic) ? `${traffic.reduce((acc, cur) => acc + (cur.views || 0), 0)}` : '-',
-              icon: 'solar:eye-bold-duotone',
-              color: 'info.main',
-            },
-          ]);
-        }
+        const topProductsArray: TopProduct[] = (topProductsData || []).map((product) => ({
+          name: product.title,
+          revenue: Number(product.total_revenue || 0),
+          sales: product.sales_count || 0,
+        }));
+        setTopProducts(topProductsArray);
+
+        // Calculate total stats
+        const totalRevenue = revenueArray.reduce((acc, cur) => acc + cur.revenue, 0);
+        const totalOrders = revenueArray.reduce((acc, cur) => acc + cur.orders, 0);
+        const totalViews = trafficArray.reduce((acc, cur) => acc + cur.views, 0);
+
+        setStats([
+          {
+            title: 'Total Revenue',
+            value: `$${totalRevenue.toFixed(2)}`,
+            icon: 'solar:dollar-bold-duotone',
+            color: 'success.main',
+          },
+          {
+            title: 'Total Orders',
+            value: `${totalOrders}`,
+            icon: 'solar:cart-large-2-bold-duotone',
+            color: 'primary.main',
+          },
+          {
+            title: 'Total Views',
+            value: `${totalViews}`,
+            icon: 'solar:eye-bold-duotone',
+            color: 'info.main',
+          },
+        ]);
       } catch (error) {
         console.error('Error fetching analytics:', error);
       } finally {

@@ -18,7 +18,8 @@ export function Block({ title, tooltip, children, sx }) {
         display: 'flex',
         position: 'relative',
         flexDirection: 'column',
-        border: (theme) => `solid 1px ${varAlpha(theme.vars.palette.grey['500Channel'], 0.12)}`,
+        bgcolor: 'background.paper',
+        border: (theme) => `solid 1px ${varAlpha(theme.vars.palette.grey['500Channel'], 0.24)}`,
         ...sx,
       }}
     >
@@ -36,6 +37,7 @@ export function Block({ title, tooltip, children, sx }) {
           display: 'inline-flex',
           bgcolor: 'text.primary',
           fontWeight: 'fontWeightSemiBold',
+          boxShadow: (theme) => theme.shadows[2],
           [stylesMode.dark]: { color: 'grey.800' },
         }}
       >

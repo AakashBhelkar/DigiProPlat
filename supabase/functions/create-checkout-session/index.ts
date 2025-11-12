@@ -27,6 +27,7 @@ serve(async (req) => {
       cancelUrl,
       buyerId,
       sellerId,
+      couponCode,
     } = await req.json();
 
     // Validate input
@@ -61,6 +62,7 @@ serve(async (req) => {
         productId,
         buyerId: buyerId || '',
         sellerId: sellerId || '',
+        couponCode: couponCode || '',
       },
     });
 

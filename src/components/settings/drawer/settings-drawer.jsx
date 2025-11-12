@@ -51,24 +51,40 @@ export function SettingsDrawer({
   }, []);
 
   const renderHead = (
-    <Box display="flex" alignItems="center" sx={{ py: 2, pr: 1, pl: 2.5 }}>
-      <Typography variant="h6" sx={{ flexGrow: 1 }}>
+    <Box 
+      display="flex" 
+      alignItems="center" 
+      sx={{ 
+        py: 2, 
+        pr: 1, 
+        pl: 2.5,
+        borderBottom: 1,
+        borderColor: 'divider',
+        bgcolor: 'background.paper',
+      }}
+    >
+      <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 700, color: 'text.primary' }}>
         Settings
       </Typography>
 
       <FullScreenButton />
 
-          <Tooltip title="Reset">
-            <IconButton
-              onClick={() => {
-                settings.onReset();
-                // Force light mode via data attribute
-                if (typeof window !== 'undefined') {
-                  document.documentElement.setAttribute('data-mui-color-scheme', 'light');
-                  localStorage.setItem('theme-mode', 'light');
-                }
-              }}
-            >
+      <Tooltip title="Reset to Defaults">
+        <IconButton
+          onClick={() => {
+            settings.onReset();
+            // Force light mode via data attribute
+            if (typeof window !== 'undefined') {
+              document.documentElement.setAttribute('data-mui-color-scheme', 'light');
+              localStorage.setItem('theme-mode', 'light');
+              // Clear app settings to force defaults
+              localStorage.removeItem('app-settings');
+              // Reload page to apply defaults
+              window.location.reload();
+            }
+          }}
+          sx={{ color: 'text.primary' }}
+        >
           <Badge color="error" variant="dot" invisible={!settings.canReset}>
             <Iconify icon="solar:restart-bold" />
           </Badge>
@@ -76,7 +92,7 @@ export function SettingsDrawer({
       </Tooltip>
 
       <Tooltip title="Close">
-        <IconButton onClick={settings.onCloseDrawer}>
+        <IconButton onClick={settings.onCloseDrawer} sx={{ color: 'text.primary' }}>
           <Iconify icon="mingcute:close-line" />
         </IconButton>
       </Tooltip>
@@ -170,17 +186,19 @@ export function SettingsDrawer({
         [`& .${drawerClasses.paper}`]: {
           ...paper({
             theme,
-            color: varAlpha(theme.vars.palette.background.defaultChannel, 0.9),
+            color: 'background.paper', // Use clean white background
           }),
           width: 360,
+          bgcolor: 'background.paper', // Ensure white background
+          boxShadow: theme.shadows[24], // Clear shadow for visibility
           ...sx,
         },
       }}
     >
       {renderHead}
 
-      <Scrollbar>
-        <Stack spacing={6} sx={{ px: 2.5, pb: 5 }}>
+      <Scrollbar sx={{ bgcolor: 'background.paper' }}>
+        <Stack spacing={4} sx={{ px: 2.5, pb: 5, pt: 3, bgcolor: 'background.paper' }}>
           <Box gap={2} display="grid" gridTemplateColumns="repeat(2, 1fr)">
             {!hideContrast && renderContrast}
             {!hideDirection && renderRTL}

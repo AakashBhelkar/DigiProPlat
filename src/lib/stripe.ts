@@ -1,6 +1,8 @@
 import { loadStripe, Stripe } from '@stripe/stripe-js';
+import { supabase } from './supabase';
 
 const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://mafryhnhgopxfckrepxv.supabase.co';
 
 if (!stripePublishableKey) {
   console.warn('Missing Stripe publishable key. Payment features will not work.');
@@ -16,28 +18,44 @@ export const getStripe = () => {
   return stripePromise;
 };
 
-// Create payment intent on the server (this would be a backend endpoint)
-export const createPaymentIntent = async (amount: number, currency: string = 'usd') => {
+// Get authentication token for Supabase edge functions
+const getAuthHeaders = async () => {
+  const { data: { session } } = await supabase.auth.getSession();
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+  
+  if (session?.access_token) {
+    headers['Authorization'] = `Bearer ${session.access_token}`;
+  }
+  
+  return headers;
+};
+
+// Create payment intent on the server using Supabase edge function
+export const createPaymentIntent = async (
+  amount: number,
+  currency: string = 'usd',
+  productId?: string,
+  productName?: string
+) => {
   try {
-    // In a real implementation, this would call your backend API
-    // which would create a payment intent using Stripe's server-side SDK
-
-    // For now, we'll simulate the response
-    // IMPORTANT: Never create payment intents on the client side in production!
-
-    const response = await fetch('/api/create-payment-intent', {
+    const headers = await getAuthHeaders();
+    
+    const response = await fetch(`${supabaseUrl}/functions/v1/create-payment-intent`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify({
         amount: Math.round(amount * 100), // Convert to cents
         currency,
+        productId: productId || '',
+        productName: productName || '',
       }),
     });
 
     if (!response.ok) {
-      throw new Error('Failed to create payment intent');
+      const errorData = await response.json().catch(() => ({ error: 'Failed to create payment intent' }));
+      throw new Error(errorData.error || 'Failed to create payment intent');
     }
 
     const data = await response.json();
@@ -48,27 +66,47 @@ export const createPaymentIntent = async (amount: number, currency: string = 'us
   }
 };
 
-// Create a checkout session (for hosted Stripe Checkout)
-export const createCheckoutSession = async (productId: string, productPrice: number, productName: string, productImage?: string) => {
+// Create a checkout session (for hosted Stripe Checkout) using Supabase edge function
+export const createCheckoutSession = async (
+  productId: string,
+  productPrice: number,
+  productName: string,
+  sellerId: string,
+  productImage?: string,
+  buyerId?: string,
+  couponCode?: string
+) => {
   try {
-    // In a real implementation, this would call your backend API
-    const response = await fetch('/api/create-checkout-session', {
+    // Get current user ID if not provided
+    if (!buyerId) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        throw new Error('User must be authenticated to create checkout session');
+      }
+      buyerId = session.user.id;
+    }
+
+    const headers = await getAuthHeaders();
+    
+    const response = await fetch(`${supabaseUrl}/functions/v1/create-checkout-session`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify({
         productId,
         productPrice: Math.round(productPrice * 100), // Convert to cents
         productName,
         productImage,
+        buyerId,
+        sellerId,
+        couponCode,
         successUrl: `${window.location.origin}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
         cancelUrl: `${window.location.origin}/marketplace`,
       }),
     });
 
     if (!response.ok) {
-      throw new Error('Failed to create checkout session');
+      const errorData = await response.json().catch(() => ({ error: 'Failed to create checkout session' }));
+      throw new Error(errorData.error || 'Failed to create checkout session');
     }
 
     const data = await response.json();

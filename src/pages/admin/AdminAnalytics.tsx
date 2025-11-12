@@ -60,8 +60,8 @@ export const AdminAnalytics: React.FC = () => {
       change: '+8.7%',
       trend: 'up',
       icon: Package,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-100'
+      color: 'text-primary',
+      bgColor: 'bg-primary/20'
     },
     {
       title: 'Total Sales',
@@ -69,8 +69,8 @@ export const AdminAnalytics: React.FC = () => {
       change: '+15.3%',
       trend: 'up',
       icon: ShoppingCart,
-      color: 'text-indigo-600',
-      bgColor: 'bg-indigo-100'
+      color: 'text-primary',
+      bgColor: 'bg-primary/20'
     }
   ];
 
@@ -92,21 +92,21 @@ export const AdminAnalytics: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Platform Analytics</h1>
+          <h1 className="text-2xl font-bold text-primary">Platform Analytics</h1>
           <p className="text-gray-600">Comprehensive insights into platform performance</p>
         </div>
         <div className="flex items-center space-x-3">
           <select
             value={timeRange}
             onChange={(e) => setTimeRange(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
           >
             <option value="7d">Last 7 days</option>
             <option value="30d">Last 30 days</option>
             <option value="90d">Last 90 days</option>
             <option value="1y">Last year</option>
           </select>
-          <button className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+          <button className="flex items-center space-x-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90">
             <Download className="h-4 w-4" />
             <span>Export Report</span>
           </button>
@@ -144,12 +144,12 @@ export const AdminAnalytics: React.FC = () => {
       {/* Main Chart */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold text-gray-900">Performance Overview</h3>
+          <h3 className="text-lg font-semibold text-primary">Performance Overview</h3>
           <div className="flex items-center space-x-2">
             <select
               value={selectedMetric}
               onChange={(e) => setSelectedMetric(e.target.value)}
-              className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-primary focus:border-primary"
             >
               <option value="revenue">Revenue</option>
               <option value="users">Users</option>
@@ -186,7 +186,7 @@ export const AdminAnalytics: React.FC = () => {
         {/* Category Distribution */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-gray-900">Revenue by Category</h3>
+            <h3 className="text-lg font-semibold text-primary">Revenue by Category</h3>
           </div>
           <div className="flex items-center justify-center">
             <ResponsiveContainer width="100%" height={300}>
@@ -227,8 +227,8 @@ export const AdminAnalytics: React.FC = () => {
         {/* Top Creators */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-gray-900">Top Creators</h3>
-            <button className="text-indigo-600 hover:text-indigo-700 text-sm font-medium">
+            <h3 className="text-lg font-semibold text-primary">Top Creators</h3>
+            <button className="text-primary hover:text-primary/80 text-sm font-medium">
               View All
             </button>
           </div>
@@ -242,7 +242,7 @@ export const AdminAnalytics: React.FC = () => {
                 className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
               >
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center">
+                  <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
                     <span className="text-sm font-medium text-white">
                       {creator.name.split(' ').map(n => n[0]).join('')}
                     </span>
@@ -264,7 +264,7 @@ export const AdminAnalytics: React.FC = () => {
 
       {/* Detailed Metrics */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-6">Detailed Metrics</h3>
+        <h3 className="text-lg font-semibold text-primary mb-6">Detailed Metrics</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="space-y-4">
             <h4 className="text-sm font-medium text-gray-900">User Engagement</h4>

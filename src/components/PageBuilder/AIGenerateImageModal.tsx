@@ -79,7 +79,7 @@ export const AIGenerateImageModal: React.FC<AIGenerateImageModalProps> = ({
             type="text"
             value={prompt}
             onChange={e => setPrompt(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary"
             placeholder="Describe the image you want (e.g. A modern SaaS hero banner...)"
             aria-label="AI image prompt input"
             disabled={isGenerating}
@@ -89,7 +89,7 @@ export const AIGenerateImageModal: React.FC<AIGenerateImageModalProps> = ({
               <button
                 key={tpl.label}
                 type="button"
-                className="px-2 py-1 text-xs rounded bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700"
+                className="px-2 py-1 text-xs rounded bg-primary/20 hover:bg-primary/30 border border-primary/30 text-primary"
                 onClick={() => handleTemplate(tpl.value)}
                 tabIndex={0}
               >{tpl.label}</button>
@@ -150,11 +150,11 @@ export const AIGenerateImageModal: React.FC<AIGenerateImageModalProps> = ({
           {error && <div className="text-red-600 text-xs mt-1">{error}</div>}
           <button
             type="submit"
-            className="w-full mt-2 px-4 py-2 rounded-lg font-bold shadow bg-indigo-600 text-white hover:bg-indigo-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full mt-2 px-4 py-2 rounded-lg font-bold shadow bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             disabled={isGenerating}
             aria-busy={isGenerating}
           >
-            {isGenerating && <span className="loader border-white border-2 border-t-indigo-600 mr-2" style={{ width: 16, height: 16, borderRadius: '50%', borderTopColor: 'transparent', animation: 'spin 1s linear infinite' }} />}
+            {isGenerating && <span className="loader border-white border-2 border-t-primary mr-2" style={{ width: 16, height: 16, borderRadius: '50%', borderTopColor: 'transparent', animation: 'spin 1s linear infinite' }} />}
             {isGenerating ? 'Generating...' : 'Generate Image'}
           </button>
         </form>

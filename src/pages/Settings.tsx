@@ -29,6 +29,7 @@ import toast from 'react-hot-toast';
 import { DashboardContent } from '../layouts/dashboard/main';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
+import { RouterLink } from '../routes/components';
 
 // ----------------------------------------------------------------------
 
@@ -47,6 +48,17 @@ export const Settings: React.FC = () => {
   const [aiKeyStatus, setAiKeyStatus] = useState<'idle' | 'saving' | 'success' | 'error' | 'testing'>('idle');
   const [aiKeyError, setAiKeyError] = useState<string | null>(null);
   const [showApiKey, setShowApiKey] = useState(false);
+  
+  // Profile form state
+  const [profileForm, setProfileForm] = useState({
+    firstName: user?.firstName || '',
+    lastName: user?.lastName || '',
+    username: user?.username || '',
+    bio: '',
+  });
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(user?.avatar || null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   const openAIModels = [
     { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo' },
@@ -63,8 +75,133 @@ export const Settings: React.FC = () => {
     { label: 'AI & OpenAI', icon: 'solar:magic-stick-3-bold-duotone' },
   ];
 
+  // Load profile data on mount
+  React.useEffect(() => {
+    if (user) {
+      setProfileForm({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        username: user.username || '',
+        bio: '', // TODO: Add bio field to User type if needed
+      });
+      setAvatarPreview(user.avatar || null);
+    }
+  }, [user]);
+
   const handleProfileUpdate = (field: string, value: string) => {
-    updateUser({ [field]: value });
+    setProfileForm(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file');
+      return;
+    }
+
+    // Validate file size (1MB max)
+    if (file.size > 1024 * 1024) {
+      toast.error('Image size must be less than 1MB');
+      return;
+    }
+
+    setIsUploadingAvatar(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        throw new Error('Not authenticated');
+      }
+
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+
+      // Upload to Supabase Storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${session.user.id}-${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('user-avatars')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true,
+        });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('user-avatars')
+        .getPublicUrl(filePath);
+
+      // Update profile with new avatar URL
+      await updateUser({ avatar: publicUrl });
+      setAvatarPreview(publicUrl);
+      toast.success('Avatar updated successfully!');
+    } catch (error: any) {
+      console.error('Error uploading avatar:', error);
+      toast.error(error.message || 'Failed to upload avatar');
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    setIsSavingProfile(true);
+    try {
+      // Validate form
+      if (!profileForm.firstName.trim()) {
+        toast.error('First name is required');
+        return;
+      }
+      if (!profileForm.lastName.trim()) {
+        toast.error('Last name is required');
+        return;
+      }
+      if (!profileForm.username.trim()) {
+        toast.error('Username is required');
+        return;
+      }
+
+      // Check username uniqueness (if changed)
+      if (profileForm.username !== user?.username) {
+        const { data: existingUser } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('username', profileForm.username)
+          .neq('id', user?.id)
+          .single();
+
+        if (existingUser) {
+          toast.error('Username already taken');
+          return;
+        }
+      }
+
+      // Update profile
+      await updateUser({
+        firstName: profileForm.firstName.trim(),
+        lastName: profileForm.lastName.trim(),
+        username: profileForm.username.trim(),
+        avatar: avatarPreview || undefined,
+      });
+
+      toast.success('Profile updated successfully!');
+    } catch (error: any) {
+      console.error('Error saving profile:', error);
+      toast.error(error.message || 'Failed to save profile');
+    } finally {
+      setIsSavingProfile(false);
+    }
   };
 
   const handleSaveAIKey = async () => {
@@ -185,6 +322,7 @@ export const Settings: React.FC = () => {
                 </Typography>
                 <Stack direction="row" spacing={3} alignItems="center">
                   <Avatar
+                    src={avatarPreview || undefined}
                     sx={{
                       width: 80,
                       height: 80,
@@ -192,13 +330,35 @@ export const Settings: React.FC = () => {
                       fontSize: '2rem',
                     }}
                   >
-                    {user?.firstName?.[0]}
-                    {user?.lastName?.[0]}
+                    {profileForm.firstName?.[0] || user?.firstName?.[0]}
+                    {profileForm.lastName?.[0] || user?.lastName?.[0]}
                   </Avatar>
                   <Stack spacing={1}>
-                    <Button variant="contained" size="medium">
-                      Change Avatar
-                    </Button>
+                    <input
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      id="avatar-upload"
+                      type="file"
+                      onChange={handleAvatarUpload}
+                      disabled={isUploadingAvatar}
+                    />
+                    <label htmlFor="avatar-upload">
+                      <Button
+                        variant="contained"
+                        size="medium"
+                        component="span"
+                        disabled={isUploadingAvatar}
+                        startIcon={
+                          isUploadingAvatar ? (
+                            <Iconify icon="solar:loading-bold-duotone" width={20} />
+                          ) : (
+                            <Iconify icon="solar:camera-bold-duotone" width={20} />
+                          )
+                        }
+                      >
+                        {isUploadingAvatar ? 'Uploading...' : 'Change Avatar'}
+                      </Button>
+                    </label>
                     <Typography variant="caption" color="text.secondary">
                       JPG, GIF or PNG. 1MB max.
                     </Typography>
@@ -208,32 +368,67 @@ export const Settings: React.FC = () => {
                   <TextField
                     fullWidth
                     label="First Name"
-                    value={user?.firstName || ''}
+                    value={profileForm.firstName}
                     onChange={(e) => handleProfileUpdate('firstName', e.target.value)}
+                    required
+                    error={!profileForm.firstName.trim()}
+                    helperText={!profileForm.firstName.trim() ? 'First name is required' : ''}
                   />
                   <TextField
                     fullWidth
                     label="Last Name"
-                    value={user?.lastName || ''}
+                    value={profileForm.lastName}
                     onChange={(e) => handleProfileUpdate('lastName', e.target.value)}
+                    required
+                    error={!profileForm.lastName.trim()}
+                    helperText={!profileForm.lastName.trim() ? 'Last name is required' : ''}
                   />
                 </Stack>
                 <TextField
                   fullWidth
                   label="Username"
-                  value={user?.username || ''}
-                  onChange={(e) => handleProfileUpdate('username', e.target.value)}
+                  value={profileForm.username}
+                  onChange={(e) => handleProfileUpdate('username', e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                  required
+                  error={!profileForm.username.trim()}
+                  helperText={!profileForm.username.trim() ? 'Username is required' : 'Only lowercase letters, numbers, and underscores allowed'}
                 />
                 <TextField
                   fullWidth
                   label="Email"
                   type="email"
                   value={user?.email || ''}
-                  onChange={(e) => handleProfileUpdate('email', e.target.value)}
+                  disabled
+                  helperText="Email cannot be changed. Contact support if you need to update your email."
                 />
-                <Stack direction="row" justifyContent="flex-end">
-                  <Button variant="contained" size="large">
-                    Save Changes
+                <Stack direction="row" justifyContent="flex-end" spacing={2}>
+                  <Button
+                    variant="outlined"
+                    size="large"
+                    onClick={() => {
+                      setProfileForm({
+                        firstName: user?.firstName || '',
+                        lastName: user?.lastName || '',
+                        username: user?.username || '',
+                        bio: '',
+                      });
+                      setAvatarPreview(user?.avatar || null);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="contained"
+                    size="large"
+                    onClick={handleSaveProfile}
+                    disabled={isSavingProfile}
+                    startIcon={
+                      isSavingProfile ? (
+                        <Iconify icon="solar:loading-bold-duotone" width={20} />
+                      ) : null
+                    }
+                  >
+                    {isSavingProfile ? 'Saving...' : 'Save Changes'}
                   </Button>
                 </Stack>
               </Stack>
@@ -484,7 +679,12 @@ export const Settings: React.FC = () => {
                       }
                     />
                     {user?.kycStatus !== 'verified' && (
-                      <Button variant="text" size="small">
+                      <Button
+                        variant="text"
+                        size="small"
+                        component={RouterLink}
+                        href="/kyc"
+                      >
                         Complete Verification
                       </Button>
                     )}

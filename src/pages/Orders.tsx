@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import {
   Box,
   Card,
@@ -7,61 +7,46 @@ import {
   Stack,
   CircularProgress,
 } from '@mui/material';
-import { OrderManagement } from '../components/Orders/OrderManagement';
 import toast from 'react-hot-toast';
-import { supabase } from '../lib/supabase';
+import { OrderManagement } from '../components/Orders/OrderManagement';
+import { useOrderStore } from '../store/orderStore';
 import { DashboardContent } from '../layouts/dashboard/main';
-
-interface Order {
-  id: string;
-  productTitle: string;
-  customerEmail: string;
-  amount: number;
-  status: 'completed' | 'pending' | 'failed' | 'refunded';
-  paymentMethod: string;
-  createdAt: string;
-  downloadCount: number;
-  maxDownloads: number;
-}
+import { Order } from '../store/orderStore';
 
 export const Orders: React.FC = () => {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { orders, isLoading, fetchOrders, processRefund, resendDownloadLink, generateDownloadLinks } = useOrderStore();
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      setLoading(true);
-      // Replace with your actual Supabase query and mapping
-      const { data, error } = await supabase
-        .from('orders')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (error) {
-        toast.error('Failed to fetch orders');
-        setOrders([]);
-      } else {
-        setOrders((data as Order[]) || []);
-      }
-      setLoading(false);
-    };
     fetchOrders();
-  }, []);
+  }, [fetchOrders]);
 
-  const handleRefund = async () => {
+  const handleRefund = async (orderId: string) => {
     try {
-      // Implement refund logic here
-      toast.success('Refund processed successfully');
-    } catch {
-      toast.error('Failed to process refund');
+      await processRefund(orderId);
+    } catch (error) {
+      // Error already handled in store
     }
   };
 
-  const handleResendDownloadLink = async () => {
+  const handleResendDownloadLink = async (orderId: string) => {
     try {
-      // Implement resend download link logic here
-      toast.success('Download link sent to customer');
-    } catch {
-      toast.error('Failed to send download link');
+      await resendDownloadLink(orderId);
+    } catch (error) {
+      // Error already handled in store
+    }
+  };
+
+  const handleDownload = async (orderId: string) => {
+    try {
+      const downloadLinks = await generateDownloadLinks(orderId);
+      if (downloadLinks && downloadLinks.length > 0) {
+        // Open first download link in new tab
+        window.open(downloadLinks[0], '_blank');
+      } else {
+        toast.error('No download links available for this order');
+      }
+    } catch (error) {
+      // Error already handled in store
     }
   };
 
@@ -81,7 +66,7 @@ export const Orders: React.FC = () => {
         {/* Orders Table */}
         <Card>
           <CardContent>
-            {loading ? (
+            {isLoading ? (
               <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
                 <CircularProgress />
               </Box>
@@ -90,6 +75,7 @@ export const Orders: React.FC = () => {
                 orders={orders}
                 onRefund={handleRefund}
                 onResendDownloadLink={handleResendDownloadLink}
+                onDownload={handleDownload}
                 showBlankTable={true}
               />
             )}

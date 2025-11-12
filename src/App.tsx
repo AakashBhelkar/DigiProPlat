@@ -15,15 +15,15 @@ import { LoginForm } from './components/Auth/LoginForm';
 import { RegisterForm } from './components/Auth/RegisterForm';
 import { AuthSplitLayout } from './layouts/auth-split';
 import { AdminLogin } from './pages/admin/AdminLogin';
-import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { AdminDashboardNew } from './pages/admin/AdminDashboardNew';
 import { UserManagement } from './pages/admin/UserManagement';
 import { ProductManagement } from './pages/admin/ProductManagement';
+import { CouponManagement } from './pages/admin/CouponManagement';
+import { AdminKYCVerification } from './pages/admin/KYCVerification';
 import { ContentModeration } from './pages/admin/ContentModeration';
 import { AdminAnalytics } from './pages/admin/AdminAnalytics';
 import { SystemSettings } from './pages/admin/SystemSettings';
 import { SystemLogs } from './pages/admin/SystemLogs';
-import { Dashboard } from './pages/Dashboard';
 import { DashboardNew } from './pages/DashboardNew';
 import { Products } from './pages/Products';
 import { ProductUploadNew } from './pages/ProductUploadNew';
@@ -36,6 +36,9 @@ import { AIAssistant } from './pages/AIAssistant';
 import { Settings } from './pages/Settings';
 import { Orders } from './pages/Orders';
 import { KYCVerificationPage } from './pages/KYCVerification';
+import { Wishlist } from './pages/Wishlist';
+import { ProductDetail } from './pages/ProductDetail';
+import { useRealtimeNotifications } from './hooks/useRealtimeNotifications';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuthStore();
@@ -75,6 +78,15 @@ function App() {
   const { fetchProducts } = useProductStore();
   const { fetchPages } = usePageBuilderStore();
   const { globalDesign } = usePageBuilderStore();
+  
+  // Enable real-time notifications
+  useRealtimeNotifications();
+
+  // Reset settings to defaults on app load (optional - uncomment to force reset)
+  useEffect(() => {
+    // Uncomment the line below to force reset settings to defaults on every app load
+    // localStorage.removeItem('app-settings');
+  }, []);
 
   // Force light mode - clear any dark mode preferences from localStorage
   useEffect(() => {
@@ -192,6 +204,8 @@ function App() {
             }>
               <Route index element={<AdminDashboardNew />} />
               <Route path="dashboard" element={<AdminDashboardNew />} />
+              <Route path="coupons" element={<CouponManagement />} />
+              <Route path="kyc" element={<AdminKYCVerification />} />
               <Route path="users" element={<UserManagement />} />
               <Route path="products" element={<ProductManagement />} />
               <Route path="moderation" element={<ContentModeration />} />
@@ -214,18 +228,20 @@ function App() {
               <Route path="pages" element={<PageBuilder />} />
               <Route path="pages/builder/:id?" element={<PageBuilder />} />
               <Route path="marketplace" element={<MarketplaceNew />} />
+              <Route path="marketplace/product/:id" element={<ProductDetail />} />
               <Route path="analytics" element={<Analytics />} />
               <Route path="wallet" element={<Wallet />} />
+              <Route path="wishlist" element={<Wishlist />} />
               <Route path="ai" element={<AIAssistant />} />
               <Route path="kyc" element={<KYCVerificationPage />} />
               <Route path="settings" element={<Settings />} />
             </Route>
           </Routes>
           <Toaster position="top-right" />
-          <SettingsDrawer hideColorScheme hideNavLayout />
+          <SettingsDrawer />
         </Router>
       </ThemeProvider>
-    </SettingsProvider>
+      </SettingsProvider>
   );
 }
 

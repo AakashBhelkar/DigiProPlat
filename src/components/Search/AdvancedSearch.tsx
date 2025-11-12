@@ -131,7 +131,7 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
           type="text"
           value={filters.query}
           onChange={(e) => updateFilter('query', e.target.value)}
-          className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-primary"
           placeholder="Search for digital products, templates, graphics..."
         />
         <div className="absolute inset-y-0 right-0 flex items-center">
@@ -139,13 +139,13 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
             onClick={() => setShowFilters(!showFilters)}
             className={`mr-3 p-2 rounded-md transition-colors ${
               showFilters || activeFiltersCount > 0
-                ? 'bg-indigo-100 text-indigo-600'
+                ? 'bg-primary/20 text-primary'
                 : 'text-gray-400 hover:text-gray-600'
             }`}
           >
             <SlidersHorizontal className="h-5 w-5" />
             {activeFiltersCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-indigo-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+              <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
                 {activeFiltersCount}
               </span>
             )}
@@ -158,7 +158,7 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
         <select
           value={filters.sortBy}
           onChange={(e) => updateFilter('sortBy', e.target.value)}
-          className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-primary focus:border-primary"
         >
           {sortOptions.map(option => (
             <option key={option.value} value={option.value}>
@@ -173,7 +173,7 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
             onClick={() => updateFilter('category', filters.category === category ? '' : category)}
             className={`px-3 py-1 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${
               filters.category === category
-                ? 'bg-indigo-100 text-indigo-800'
+                ? 'bg-primary/20 text-primary'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
@@ -218,7 +218,7 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
                 <select
                   value={filters.category}
                   onChange={(e) => updateFilter('category', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary"
                 >
                   <option value="">All Categories</option>
                   {categories.map(category => (
@@ -305,7 +305,7 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
                 <select
                   value={filters.dateRange}
                   onChange={(e) => updateFilter('dateRange', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary"
                 >
                   {dateRanges.map(range => (
                     <option key={range.value} value={range.value}>
@@ -327,7 +327,7 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
                         type="checkbox"
                         checked={filters.fileTypes.includes(type.id)}
                         onChange={() => toggleFileType(type.id)}
-                        className="mr-2 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                        className="mr-2 h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
                       />
                       <span className="text-sm text-gray-700">{type.label}</span>
                     </label>
@@ -349,7 +349,7 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
                       onClick={() => toggleTag(tag)}
                       className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium transition-colors ${
                         filters.tags.includes(tag)
-                          ? 'bg-indigo-100 text-indigo-800'
+                          ? 'bg-primary/20 text-primary'
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
                     >
@@ -370,7 +370,7 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
                   </span>
                   <button
                     onClick={clearFilters}
-                    className="text-sm text-indigo-600 hover:text-indigo-700"
+                    className="text-sm text-primary hover:text-primary/80"
                   >
                     Clear all filters
                   </button>
@@ -384,7 +384,7 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
       {/* Loading State */}
       {isLoading && (
         <div className="flex items-center justify-center py-4">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div>
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
           <span className="ml-2 text-sm text-gray-600">Searching...</span>
         </div>
       )}

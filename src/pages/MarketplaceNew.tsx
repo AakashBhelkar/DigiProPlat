@@ -45,7 +45,10 @@ import {
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useProductStore } from '../store/productStore';
+import { useWishlistStore } from '../store/wishlistStore';
 import { CheckoutModal } from '../components/Payment/CheckoutModal';
+import { SearchAutocomplete } from '../components/Search/SearchAutocomplete';
+import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 
 // Motion components
@@ -68,6 +71,7 @@ interface MarketplaceProduct {
   };
   tags: string[];
   isInWishlist: boolean;
+  sellerId?: string; // Add sellerId for checkout
 }
 
 export const MarketplaceNew: React.FC = () => {
@@ -82,7 +86,7 @@ export const MarketplaceNew: React.FC = () => {
   const [minRating, setMinRating] = useState<number>(0);
   const [sortBy, setSortBy] = useState<string>('relevance');
   const [showFilters, setShowFilters] = useState(false);
-  const [wishlist, setWishlist] = useState<Set<string>>(new Set());
+  const { wishlist, addToWishlist, removeFromWishlist, isInWishlist, fetchWishlist } = useWishlistStore();
   const [selectedProduct, setSelectedProduct] = useState<MarketplaceProduct | null>(null);
   const [showCheckout, setShowCheckout] = useState(false);
 
@@ -214,33 +218,81 @@ export const MarketplaceNew: React.FC = () => {
   ];
 
   // Use mock products for now (replace with real products when ready)
-  const displayProducts = products.length > 0 ? products.map(p => ({
+  // Fetch products with ratings from database
+  const [productsWithRatings, setProductsWithRatings] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showAutocomplete, setShowAutocomplete] = useState(false);
+  
+  useEffect(() => {
+    const fetchProductsWithRatings = async () => {
+      try {
+        setIsSearching(true);
+        let query = supabase
+          .from('products')
+          .select('id, title, description, price, category, tags, user_id, sales_count, average_rating, review_count, product_files(storage_path)')
+          .eq('is_public', true);
+
+        // If search query exists, use full-text search
+        if (searchQuery.trim()) {
+          // Use textSearch for full-text search (if search_vector column exists)
+          // Otherwise fall back to ilike pattern matching
+          query = query.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
+        }
+
+        query = query.order('created_at', { ascending: false });
+
+        const { data, error } = await query;
+
+        if (!error && data) {
+          setProductsWithRatings(data);
+        } else if (error) {
+          console.error('Error fetching products:', error);
+        }
+      } catch (err) {
+        console.error('Error fetching products with ratings:', err);
+      } finally {
+        setIsSearching(false);
+      }
+    };
+    
+    // Debounce search
+    const timeoutId = setTimeout(() => {
+      fetchProductsWithRatings();
+    }, searchQuery ? 300 : 0);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
+
+  const displayProducts = productsWithRatings.length > 0 ? productsWithRatings.map((p: any) => ({
     id: p.id,
     title: p.title,
     description: p.description,
     price: p.price,
     category: p.category,
-    rating: 4.5, // Would come from reviews in real app
-    reviews: 0,
-    downloads: p.sales || 0,
-    thumbnail: p.files?.[0]?.url || 'https://images.pexels.com/photos/267350/pexels-photo-267350.jpeg',
+    rating: Number(p.average_rating || 0),
+    reviews: p.review_count || 0,
+    downloads: p.sales_count || 0,
+    thumbnail: p.product_files?.[0]?.storage_path || 'https://images.pexels.com/photos/267350/pexels-photo-267350.jpeg',
     author: {
       name: 'Product Owner',
       avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg'
     },
     tags: p.tags || [],
-    isInWishlist: false
-  })) : mockProducts;
+    isInWishlist: isInWishlist(p.id),
+    sellerId: p.user_id // Include seller ID for checkout
+  })) : mockProducts.map(p => ({
+    ...p,
+    isInWishlist: isInWishlist(p.id),
+  }));
 
-  // Filter products
+  // Filter products (search is now done in database query, but we still filter by category, price, rating)
   const filteredProducts = displayProducts.filter(product => {
-    const matchesSearch = product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         product.description.toLowerCase().includes(searchQuery.toLowerCase());
+    // Search is now handled by database query, so we don't filter by searchQuery here
     const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
     const matchesPrice = product.price >= priceRange[0] && product.price <= priceRange[1];
     const matchesRating = product.rating >= minRating;
 
-    return matchesSearch && matchesCategory && matchesPrice && matchesRating;
+    return matchesCategory && matchesPrice && matchesRating;
   });
 
   // Sort products
@@ -268,18 +320,12 @@ export const MarketplaceNew: React.FC = () => {
   ].filter(Boolean).length;
 
   // Handlers
-  const toggleWishlist = (productId: string) => {
-    setWishlist(prev => {
-      const newWishlist = new Set(prev);
-      if (newWishlist.has(productId)) {
-        newWishlist.delete(productId);
-        toast.success('Removed from wishlist');
-      } else {
-        newWishlist.add(productId);
-        toast.success('Added to wishlist');
-      }
-      return newWishlist;
-    });
+  const toggleWishlist = async (productId: string) => {
+    if (isInWishlist(productId)) {
+      await removeFromWishlist(productId);
+    } else {
+      await addToWishlist(productId);
+    }
   };
 
   const handlePurchase = (product: MarketplaceProduct) => {
@@ -302,6 +348,7 @@ export const MarketplaceNew: React.FC = () => {
 
   useEffect(() => {
     fetchProducts();
+    fetchWishlist();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -321,11 +368,11 @@ export const MarketplaceNew: React.FC = () => {
             </Box>
             <Stack direction="row" spacing={2}>
               <Tooltip title="Wishlist">
-                <Badge badgeContent={wishlist.size} color="primary">
+                <Badge badgeContent={wishlist.length} color="error">
                   <Button
                     variant="outlined"
                     startIcon={<Favorite />}
-                    onClick={() => {/* Navigate to wishlist */}}
+                    onClick={() => navigate('/wishlist')}
                   >
                     Wishlist
                   </Button>
@@ -356,31 +403,56 @@ export const MarketplaceNew: React.FC = () => {
             }}
           >
             <Stack spacing={3}>
-              <TextField
-                fullWidth
-                placeholder="Search for digital products, templates, graphics..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon />
-                    </InputAdornment>
-                  ),
-                  endAdornment: searchQuery && (
-                    <InputAdornment position="end">
-                      <IconButton size="small" onClick={() => setSearchQuery('')}>
-                        <Clear />
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    bgcolor: 'background.paper',
-                  }
-                }}
-              />
+              <Box sx={{ position: 'relative' }}>
+                <TextField
+                  fullWidth
+                  placeholder="Search for digital products, templates, graphics..."
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setShowAutocomplete(true);
+                  }}
+                  onFocus={() => {
+                    setShowAutocomplete(true);
+                  }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon />
+                      </InputAdornment>
+                    ),
+                    endAdornment: searchQuery && (
+                      <InputAdornment position="end">
+                        <IconButton size="small" onClick={() => {
+                          setSearchQuery('');
+                          setShowAutocomplete(false);
+                        }}>
+                          <Clear />
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      bgcolor: 'background.paper',
+                    }
+                  }}
+                />
+                {showAutocomplete && (
+                  <SearchAutocomplete
+                    searchQuery={searchQuery}
+                    onSelect={(query) => {
+                      setSearchQuery(query);
+                      setShowAutocomplete(false);
+                    }}
+                    onClear={() => {
+                      setSearchQuery('');
+                      setShowAutocomplete(false);
+                    }}
+                    onClose={() => setShowAutocomplete(false)}
+                  />
+                )}
+              </Box>
 
               {/* Quick Filters */}
               <Stack direction="row" spacing={2} flexWrap="wrap" alignItems="center">
@@ -608,7 +680,7 @@ export const MarketplaceNew: React.FC = () => {
                           '&:hover': { bgcolor: 'background.paper', transform: 'scale(1.1)' }
                         }}
                       >
-                        {wishlist.has(product.id) ? (
+                        {product.isInWishlist ? (
                           <Favorite color="error" />
                         ) : (
                           <FavoriteBorder />
@@ -643,7 +715,10 @@ export const MarketplaceNew: React.FC = () => {
                         WebkitLineClamp: 2,
                         WebkitBoxOrient: 'vertical',
                         minHeight: '3.6em',
+                        cursor: 'pointer',
+                        '&:hover': { color: 'primary.main' }
                       }}
+                      onClick={() => navigate(`/marketplace/product/${product.id}`)}
                     >
                       {product.title}
                     </Typography>
@@ -749,7 +824,8 @@ export const MarketplaceNew: React.FC = () => {
             id: selectedProduct.id,
             title: selectedProduct.title,
             price: selectedProduct.price,
-            thumbnail: selectedProduct.thumbnail
+            thumbnail: selectedProduct.thumbnail,
+            sellerId: selectedProduct.sellerId
           }}
           onSuccess={handleCheckoutSuccess}
         />

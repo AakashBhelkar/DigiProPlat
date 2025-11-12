@@ -292,14 +292,14 @@ export const ProductManagement: React.FC = () => {
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: 700 }}>Product</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Author</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Category</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Price</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Sales</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Revenue</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 700 }}>
+                  <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>Product</TableCell>
+                  <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>Author</TableCell>
+                  <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>Category</TableCell>
+                  <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>Price</TableCell>
+                  <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>Sales</TableCell>
+                  <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>Revenue</TableCell>
+                  <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>Status</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 700, color: 'primary.main' }}>
                     Actions
                   </TableCell>
                 </TableRow>

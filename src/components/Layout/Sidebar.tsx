@@ -38,7 +38,7 @@ export const Sidebar: React.FC = () => {
       <div className="flex-1 flex flex-col pt-3 pb-2 overflow-y-auto">
         <div className="flex items-center flex-shrink-0 px-3 mb-4">
           <div className="flex-shrink-0">
-            <div className="w-9 h-9 bg-indigo-500 rounded-full flex items-center justify-center">
+            <div className="w-9 h-9 bg-primary rounded-full flex items-center justify-center">
               <span className="text-xs font-medium">
                 {(user?.firstName?.[0] || user?.email?.[0] || '').toUpperCase()}{(user?.lastName?.[0] || '')}
               </span>
@@ -68,13 +68,13 @@ export const Sidebar: React.FC = () => {
           ))}
         </nav>
         <div className="flex-shrink-0 px-3 py-3 border-t border-gray-700 mt-2">
-          <div className="bg-indigo-600 rounded-lg p-2">
+          <div className="bg-primary rounded-lg p-2">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[11px] text-indigo-200">Wallet</p>
+                <p className="text-[11px] text-primary-foreground/80">Wallet</p>
                 <p className="text-base font-semibold">${user?.walletBalance?.toFixed(2)}</p>
               </div>
-              <Wallet className="h-5 w-5 text-indigo-200" />
+              <Wallet className="h-5 w-5 text-primary-foreground/80" />
             </div>
           </div>
         </div>

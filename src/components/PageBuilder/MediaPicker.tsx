@@ -247,19 +247,19 @@ export const MediaPicker: React.FC<MediaPickerProps> = ({ value, onChange, multi
   return (
     <div className="space-y-2">
       {label && <label className="block text-sm font-medium text-gray-700">{label}</label>}
-      <div {...getRootProps()} className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors ${isDragActive ? 'border-indigo-500 bg-indigo-50' : 'border-gray-300 bg-white'}`}
+      <div {...getRootProps()} className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors ${isDragActive ? 'border-primary bg-primary/10' : 'border-gray-300 bg-white'}`}
         aria-label="Upload image(s)"
         tabIndex={0}
       >
         <input {...getInputProps()} />
         {uploading ? (
           <div className="flex flex-col items-center gap-2">
-            <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
             <span className="text-sm text-gray-600">Uploading... {uploadProgress !== null ? `${uploadProgress}%` : ''}</span>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-2">
-            <Upload className="h-8 w-8 text-indigo-400" />
+            <Upload className="h-8 w-8 text-primary/60" />
             <span className="text-sm text-gray-600">Drag & drop or click to upload {multiple ? 'images' : 'an image'}</span>
           </div>
         )}
@@ -291,7 +291,7 @@ export const MediaPicker: React.FC<MediaPickerProps> = ({ value, onChange, multi
             <SortableContext items={value} strategy={verticalListSortingStrategy}>
               <div className="flex gap-2 mt-1 flex-wrap">
                 {value.map((url, idx) => (
-                  <div key={url} id={url} className={`relative group w-24 h-32 rounded overflow-hidden border border-gray-200 bg-gray-50 flex flex-col items-center justify-center ${dragging ? 'ring-2 ring-indigo-400' : ''}`}
+                  <div key={url} id={url} className={`relative group w-24 h-32 rounded overflow-hidden border border-gray-200 bg-gray-50 flex flex-col items-center justify-center ${dragging ? 'ring-2 ring-primary' : ''}`}
                     tabIndex={0}
                   >
                     <input
@@ -310,7 +310,7 @@ export const MediaPicker: React.FC<MediaPickerProps> = ({ value, onChange, multi
                       value={altTexts[idx] || ''}
                       onChange={e => updateAltText(idx, e.target.value)}
                       placeholder="Alt text"
-                      className="w-full px-2 py-1 text-xs border-t border-gray-200 focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400"
+                      className="w-full px-2 py-1 text-xs border-t border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary"
                       aria-label="Edit alt text"
                     />
                     <button type="button" onClick={() => removeImage(idx)} className="absolute top-1 right-1 bg-white/80 rounded-full p-1 text-gray-700 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity" aria-label="Remove image">
@@ -333,7 +333,7 @@ export const MediaPicker: React.FC<MediaPickerProps> = ({ value, onChange, multi
                 value={altTexts[idx] || ''}
                 onChange={e => updateAltText(idx, e.target.value)}
                 placeholder="Alt text"
-                className="w-full px-2 py-1 text-xs border-t border-gray-200 focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400"
+                className="w-full px-2 py-1 text-xs border-t border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary"
                 aria-label="Edit alt text"
               />
               <button type="button" onClick={() => removeImage(idx)} className="absolute top-1 right-1 bg-white/80 rounded-full p-1 text-gray-700 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity" aria-label="Remove image">
@@ -344,15 +344,15 @@ export const MediaPicker: React.FC<MediaPickerProps> = ({ value, onChange, multi
         </div>
       )}
       <div className="flex items-center gap-2 mb-2">
-        <button type="button" className="ml-1 p-1 rounded hover:bg-indigo-100" title="AI Generate Image" onClick={handleAIGenerate}>
-          <Sparkles className="h-4 w-4 text-purple-500" />
+        <button type="button" className="ml-1 p-1 rounded hover:bg-primary/20" title="AI Generate Image" onClick={handleAIGenerate}>
+          <Sparkles className="h-4 w-4 text-primary" />
         </button>
       </div>
       <div className="flex gap-2 mt-3">
-        <button type="button" className="flex items-center gap-2 text-indigo-600 hover:underline text-sm" onClick={() => setShowUnsplash(true)}>
+        <button type="button" className="flex items-center gap-2 text-primary hover:underline text-sm" onClick={() => setShowUnsplash(true)}>
           <Search className="h-4 w-4" /> Insert from Unsplash
         </button>
-        <button type="button" className="flex items-center gap-2 text-indigo-600 hover:underline text-sm" onClick={() => { setShowLibrary(true); fetchLibraryImages(); }}>
+        <button type="button" className="flex items-center gap-2 text-primary hover:underline text-sm" onClick={() => { setShowLibrary(true); fetchLibraryImages(); }}>
           <Image className="h-4 w-4" /> Media Library
         </button>
       </div>
@@ -371,7 +371,7 @@ export const MediaPicker: React.FC<MediaPickerProps> = ({ value, onChange, multi
             ) : (
               <div className="grid grid-cols-3 gap-3">
                 {libraryImages.map((img) => (
-                  <button key={img.url} className="rounded overflow-hidden border border-gray-200 hover:ring-2 hover:ring-indigo-400 focus:ring-2 focus:ring-indigo-400" onClick={() => { setPreviewImage(img); fetchImageDetails(img); }} aria-label={img.name}>
+                  <button key={img.url} className="rounded overflow-hidden border border-gray-200 hover:ring-2 hover:ring-primary focus:ring-2 focus:ring-primary" onClick={() => { setPreviewImage(img); fetchImageDetails(img); }} aria-label={img.name}>
                     <img src={img.url} alt={img.name} className="object-cover w-full h-24" />
                   </button>
                 ))}
@@ -394,11 +394,11 @@ export const MediaPicker: React.FC<MediaPickerProps> = ({ value, onChange, multi
                   )}
                 </div>
                 <div className="flex gap-2 w-full">
-                  <button className="flex-1 px-3 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm" onClick={() => { navigator.clipboard.writeText(previewImage.url); toast.success('URL copied!'); }}>Copy URL</button>
+                  <button className="flex-1 px-3 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90 text-sm" onClick={() => { navigator.clipboard.writeText(previewImage.url); toast.success('URL copied!'); }}>Copy URL</button>
                   <a className="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-sm text-center" href={previewImage.url} download target="_blank" rel="noopener noreferrer">Download</a>
                   <button className="flex-1 px-3 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200 text-sm" onClick={async () => { /* @ts-ignore */ const { error } = await window.supabase.storage.from('page-media').remove([`media/${previewImage.name}`]); if (!error) { setLibraryImages(libraryImages.filter(i => i.name !== previewImage.name)); setPreviewImage(null); toast.success('Image deleted'); } else { toast.error('Delete failed'); } }}>Delete</button>
                 </div>
-                <button className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm w-full" onClick={() => { onChange(multiple ? [...value, previewImage.url] : [previewImage.url]); setShowLibrary(false); setPreviewImage(null); }}>Insert</button>
+                <button className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90 text-sm w-full" onClick={() => { onChange(multiple ? [...value, previewImage.url] : [previewImage.url]); setShowLibrary(false); setPreviewImage(null); }}>Insert</button>
               </div>
             </div>
           )}
@@ -412,11 +412,11 @@ export const MediaPicker: React.FC<MediaPickerProps> = ({ value, onChange, multi
             <h3 className="text-lg font-bold mb-2">Search Unsplash</h3>
             <div className="flex gap-2 mb-4">
               <input type="text" value={unsplashQuery} onChange={e => setUnsplashQuery(e.target.value)} className="flex-1 px-3 py-2 border border-gray-300 rounded-md" placeholder="Search for images..." onKeyDown={e => e.key === 'Enter' && searchUnsplash()} aria-label="Unsplash search input" />
-              <button onClick={searchUnsplash} className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700" disabled={unsplashLoading}>{unsplashLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Search'}</button>
+              <button onClick={searchUnsplash} className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90" disabled={unsplashLoading}>{unsplashLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Search'}</button>
             </div>
             <div className="grid grid-cols-3 gap-3">
               {unsplashResults.map((img: any) => (
-                <button key={img.id} className="rounded overflow-hidden border border-gray-200 hover:ring-2 hover:ring-indigo-400 focus:ring-2 focus:ring-indigo-400" onClick={() => selectUnsplash(img.urls.small, img.alt_description)} aria-label={img.alt_description || 'Select image'}>
+                <button key={img.id} className="rounded overflow-hidden border border-gray-200 hover:ring-2 hover:ring-primary focus:ring-2 focus:ring-primary" onClick={() => selectUnsplash(img.urls.small, img.alt_description)} aria-label={img.alt_description || 'Select image'}>
                   <img src={img.urls.small} alt={img.alt_description || 'Unsplash image'} className="object-cover w-full h-24" />
                 </button>
               ))}
@@ -444,7 +444,7 @@ export const MediaPicker: React.FC<MediaPickerProps> = ({ value, onChange, multi
             </div>
             <div className="flex gap-2 mt-4 justify-end">
               <button className="px-4 py-2 bg-gray-100 rounded" onClick={() => setCropModalOpen(false)}>Cancel</button>
-              <button className="px-4 py-2 bg-indigo-600 text-white rounded" onClick={handleCropComplete} disabled={cropping}>{cropping ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Crop & Upload'}</button>
+              <button className="px-4 py-2 bg-primary text-primary-foreground rounded" onClick={handleCropComplete} disabled={cropping}>{cropping ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Crop & Upload'}</button>
             </div>
           </div>
         </div>

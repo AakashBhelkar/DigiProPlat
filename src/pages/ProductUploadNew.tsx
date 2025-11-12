@@ -101,14 +101,79 @@ export const ProductUploadNew: React.FC = () => {
   const [errors, setErrors] = useState<Partial<Record<keyof ProductFormData, string>>>({});
 
   // Dropzone for file upload
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop: (acceptedFiles) => {
-      setFormData(prev => ({
-        ...prev,
-        files: [...prev.files, ...acceptedFiles]
-      }));
+  const { getRootProps, getInputProps, isDragActive, fileRejections } = useDropzone({
+    onDrop: (acceptedFiles, rejectedFiles) => {
+      // Add accepted files
+      if (acceptedFiles.length > 0) {
+        setFormData(prev => ({
+          ...prev,
+          files: [...prev.files, ...acceptedFiles]
+        }));
+        toast.success(`Added ${acceptedFiles.length} file(s)`);
+      }
+      
+      // Show errors for rejected files
+      if (rejectedFiles.length > 0) {
+        rejectedFiles.forEach(({ file, errors }) => {
+          errors.forEach((error) => {
+            if (error.code === 'file-too-large') {
+              toast.error(`${file.name} is too large. Maximum size is 100MB.`);
+            } else if (error.code === 'file-invalid-type') {
+              toast.error(`${file.name} has an invalid file type.`);
+            } else {
+              toast.error(`${file.name}: ${error.message}`);
+            }
+          });
+        });
+      }
+    },
+    accept: {
+      'image/png': ['.png'],
+      'image/jpeg': ['.jpg', '.jpeg'],
+      'image/gif': ['.gif'],
+      'image/webp': ['.webp'],
+      'image/svg+xml': ['.svg'],
+      'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp', '.ico'],
+      'application/pdf': ['.pdf'],
+      'application/zip': ['.zip'],
+      'application/x-rar-compressed': ['.rar'],
+      'application/x-7z-compressed': ['.7z'],
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+      'application/msword': ['.doc'],
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
+      'application/vnd.ms-excel': ['.xls'],
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation': ['.pptx'],
+      'application/vnd.ms-powerpoint': ['.ppt'],
+      'text/plain': ['.txt'],
+      'video/*': ['.mp4', '.avi', '.mov', '.wmv', '.flv', '.webm'],
+      'audio/*': ['.mp3', '.wav', '.ogg', '.m4a', '.aac'],
+    },
+    validator: (file) => {
+      // Additional validation: check file extension as fallback
+      const fileName = file.name.toLowerCase();
+      const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp', '.ico'];
+      const isImage = imageExtensions.some(ext => fileName.endsWith(ext)) || file.type.startsWith('image/');
+      
+      if (isImage || file.type === 'application/pdf' || file.type.includes('zip') || 
+          file.type.includes('rar') || file.type.includes('document') || 
+          file.type.startsWith('video/') || file.type.startsWith('audio/') ||
+          file.type === 'text/plain') {
+        return null; // File is valid
+      }
+      
+      // Allow if no type detected but has common extension
+      const commonExtensions = ['.pdf', '.zip', '.rar', '.7z', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.mp4', '.avi', '.mov', '.mp3', '.wav'];
+      if (commonExtensions.some(ext => fileName.endsWith(ext))) {
+        return null; // File is valid based on extension
+      }
+      
+      return {
+        code: 'file-invalid-type',
+        message: 'File type not supported'
+      };
     },
     maxSize: 100 * 1024 * 1024, // 100MB
+    multiple: true,
   });
 
   const validateStep = (step: number): boolean => {
@@ -438,7 +503,7 @@ export const ProductUploadNew: React.FC = () => {
                   or click to browse your computer
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  Supports: PDF, ZIP, RAR, Images, Documents (Max 100MB per file)
+                  Supports: Images (PNG, JPG, JPEG, GIF, WEBP, SVG), PDF, ZIP, RAR, Documents, Videos, Audio (Max 100MB per file)
                 </Typography>
               </Paper>
 

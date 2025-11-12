@@ -17,13 +17,30 @@ import {
   useTheme,
   CircularProgress,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  IconButton,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  InputAdornment,
+  Checkbox,
+  FormControlLabel,
 } from '@mui/material';
 import { Iconify } from '../components/iconify';
 import { supabase } from '../lib/supabase';
-import { formatDistanceToNow } from 'date-fns';
+import { useAuthStore } from '../store/authStore';
+import { formatDistanceToNow, format, parseISO } from 'date-fns';
 import { DashboardContent } from '../layouts/dashboard/main';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
+import toast from 'react-hot-toast';
+import { X, Plus, Trash2 } from 'lucide-react';
 
 // ----------------------------------------------------------------------
 
@@ -37,8 +54,37 @@ interface Transaction {
   productTitle?: string;
 }
 
+interface WithdrawalRequest {
+  id: string;
+  amount: number;
+  payment_method: string;
+  payment_details: any;
+  status: 'pending' | 'approved' | 'processing' | 'completed' | 'rejected' | 'cancelled';
+  admin_notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface PaymentMethod {
+  id: string;
+  user_id: string;
+  type: 'bank' | 'paypal' | 'stripe';
+  account_name?: string;
+  account_number?: string;
+  routing_number?: string;
+  bank_name?: string;
+  email?: string;
+  account_id?: string;
+  is_default: boolean;
+  is_active: boolean;
+  metadata?: any;
+  created_at: string;
+  updated_at: string;
+}
+
 export const Wallet: React.FC = () => {
   const theme = useTheme();
+  const { user, checkAuth } = useAuthStore();
   const [activeTab, setActiveTab] = useState(0);
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [withdrawMethod, setWithdrawMethod] = useState('bank');
@@ -46,33 +92,145 @@ export const Wallet: React.FC = () => {
   const [pendingBalance, setPendingBalance] = useState(0);
   const [totalEarnings, setTotalEarnings] = useState(0);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [withdrawalRequests, setWithdrawalRequests] = useState<WithdrawalRequest[]>([]);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [paymentMethodDialogOpen, setPaymentMethodDialogOpen] = useState(false);
+  const [editingPaymentMethod, setEditingPaymentMethod] = useState<PaymentMethod | null>(null);
+  const [isSavingPaymentMethod, setIsSavingPaymentMethod] = useState(false);
+  const [paymentMethodForm, setPaymentMethodForm] = useState({
+    type: 'bank' as 'bank' | 'paypal' | 'stripe',
+    account_name: '',
+    account_number: '',
+    routing_number: '',
+    bank_name: '',
+    email: '',
+    is_default: false,
+  });
 
   useEffect(() => {
-    const fetchWalletData = async () => {
-      setLoading(true);
-      try {
-        const { data: walletData } = await supabase.from('wallets').select('*').single();
-        if (walletData && typeof walletData === 'object') {
-          setWalletBalance((walletData as { balance?: number }).balance || 0);
-          setPendingBalance((walletData as { pending?: number }).pending || 0);
-          setTotalEarnings((walletData as { total_earnings?: number }).total_earnings || 0);
-        }
-        const { data: txs } = await supabase
-          .from('transactions')
-          .select('*')
-          .order('date', { ascending: false });
-        if (Array.isArray(txs)) {
-          setTransactions(txs as Transaction[]);
-        }
-      } catch (error) {
-        console.error('Error fetching wallet data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchWalletData();
   }, []);
+
+  const fetchWalletData = async () => {
+    setLoading(true);
+    try {
+      const { user } = useAuthStore.getState();
+      if (!user) return;
+
+      // Fetch wallet balance from profiles table
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('wallet_balance')
+        .eq('id', user.id)
+        .single();
+
+      if (profile) {
+        setWalletBalance(Number(profile.wallet_balance || 0));
+      }
+
+      // Calculate pending balance from pending withdrawal requests
+      const { data: pendingWithdrawals } = await supabase
+        .from('withdrawal_requests')
+        .select('amount')
+        .eq('user_id', user.id)
+        .in('status', ['pending', 'processing', 'approved']);
+
+      const pending = pendingWithdrawals?.reduce((sum, w) => sum + Number(w.amount || 0), 0) || 0;
+      setPendingBalance(pending);
+
+      // Calculate total earnings from completed sale transactions
+      const { data: sales } = await supabase
+        .from('transactions')
+        .select('amount')
+        .eq('user_id', user.id)
+        .eq('type', 'sale')
+        .eq('status', 'completed');
+
+      const earnings = sales?.reduce((sum, t) => sum + Number(t.amount || 0), 0) || 0;
+      setTotalEarnings(earnings);
+
+      // Fetch transactions
+      const { data: txs } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (Array.isArray(txs)) {
+        setTransactions(
+          txs.map((t: any) => ({
+            id: t.id,
+            type: t.type,
+            amount: Number(t.amount),
+            status: t.status,
+            description: t.description,
+            date: t.created_at,
+            productTitle: t.product_id ? 'Product' : undefined,
+          }))
+        );
+      }
+
+      // Fetch withdrawal requests
+      const { data: withdrawals } = await supabase
+        .from('withdrawal_requests')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (Array.isArray(withdrawals)) {
+        setWithdrawalRequests(withdrawals);
+      }
+
+      // Fetch payment methods
+      const { data: methods } = await supabase
+        .from('payment_methods')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .order('is_default', { ascending: false })
+        .order('created_at', { ascending: false });
+
+      if (Array.isArray(methods)) {
+        const mappedMethods = methods.map((m: any) => ({
+          id: m.id,
+          user_id: m.user_id,
+          type: m.type,
+          account_name: m.account_name,
+          account_number: m.account_number,
+          routing_number: m.routing_number,
+          bank_name: m.bank_name,
+          email: m.email,
+          account_id: m.account_id,
+          is_default: m.is_default,
+          is_active: m.is_active,
+          metadata: m.metadata,
+          created_at: m.created_at,
+          updated_at: m.updated_at,
+        }));
+        setPaymentMethods(mappedMethods);
+        
+        // Reset withdrawMethod to match an available payment method or default
+        if (mappedMethods.length > 0) {
+          const defaultMethod = mappedMethods.find(m => m.is_default) || mappedMethods[0];
+          setWithdrawMethod(defaultMethod.type);
+        } else {
+          // No payment methods, reset to default
+          setWithdrawMethod('bank');
+        }
+      } else {
+        // No payment methods, reset to default
+        setWithdrawMethod('bank');
+      }
+    } catch (error) {
+      console.error('Error fetching wallet data:', error);
+      toast.error('Failed to fetch wallet data');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getTransactionIcon = (type: string) => {
     switch (type) {
@@ -102,10 +260,83 @@ export const Wallet: React.FC = () => {
     }
   };
 
-  const handleWithdraw = () => {
-    if (!withdrawAmount || parseFloat(withdrawAmount) <= 0) return;
-    alert(`Withdrawal request of $${withdrawAmount} submitted successfully!`);
-    setWithdrawAmount('');
+  const handleWithdraw = async () => {
+    if (!user) {
+      toast.error('You must be logged in to request a withdrawal');
+      return;
+    }
+
+    const amount = parseFloat(withdrawAmount);
+    if (!amount || amount <= 0) {
+      toast.error('Please enter a valid withdrawal amount');
+      return;
+    }
+
+    if (amount < 10) {
+      toast.error('Minimum withdrawal amount is $10.00');
+      return;
+    }
+
+    if (amount > walletBalance) {
+      toast.error(`Insufficient balance. Available: $${walletBalance.toFixed(2)}`);
+      return;
+    }
+
+    // Check KYC status
+    if (user.kycStatus !== 'verified') {
+      toast.error('KYC verification is required before making withdrawals. Please complete your identity verification first.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error('Not authenticated');
+      }
+
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://mafryhnhgopxfckrepxv.supabase.co';
+
+      // Get payment details based on method
+      let paymentDetails = null;
+      if (withdrawMethod === 'bank') {
+        // In production, fetch from payment_methods table
+        paymentDetails = { type: 'bank' };
+      } else if (withdrawMethod === 'paypal') {
+        paymentDetails = { type: 'paypal' };
+      } else if (withdrawMethod === 'stripe') {
+        paymentDetails = { type: 'stripe' };
+      }
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/request-withdrawal`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          amount,
+          paymentMethod: withdrawMethod,
+          paymentDetails,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create withdrawal request');
+      }
+
+      toast.success('Withdrawal request submitted successfully!');
+      setWithdrawAmount('');
+      await fetchWalletData();
+      await checkAuth(); // Refresh user data
+    } catch (error: any) {
+      console.error('Error creating withdrawal request:', error);
+      toast.error(error.message || 'Failed to create withdrawal request');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -213,6 +444,7 @@ export const Wallet: React.FC = () => {
               <Tab label="Overview" />
               <Tab label="Transactions" />
               <Tab label="Withdraw" />
+              <Tab label="Payment Methods" />
             </Tabs>
           </Box>
 
@@ -298,7 +530,17 @@ export const Wallet: React.FC = () => {
                         </CardContent>
                       </Card>
 
-                      <Card variant="outlined">
+                      <Card
+                        variant="outlined"
+                        sx={{
+                          cursor: 'pointer',
+                          '&:hover': {
+                            bgcolor: alpha(theme.palette.primary.main, 0.04),
+                            borderColor: 'primary.main',
+                          },
+                        }}
+                        onClick={() => setActiveTab(3)}
+                      >
                         <CardContent>
                           <Stack direction="row" alignItems="center" justifyContent="space-between">
                             <Stack direction="row" alignItems="center" spacing={2}>
@@ -401,7 +643,7 @@ export const Wallet: React.FC = () => {
 
             {/* Withdraw Tab */}
             {activeTab === 2 && (
-              <Stack spacing={4} sx={{ maxWidth: 500 }}>
+              <Stack spacing={4}>
                 <Box>
                   <Typography variant="h6" fontWeight={700} gutterBottom>
                     Withdraw Funds
@@ -411,7 +653,7 @@ export const Wallet: React.FC = () => {
                   </Typography>
                 </Box>
 
-                <Stack spacing={3}>
+                <Stack spacing={3} sx={{ maxWidth: 500 }}>
                   <TextField
                     fullWidth
                     label="Withdrawal Amount"
@@ -422,21 +664,51 @@ export const Wallet: React.FC = () => {
                     InputProps={{
                       startAdornment: <InputAdornment position="start">$</InputAdornment>,
                     }}
-                    helperText={`Available: $${walletBalance.toFixed(2)}`}
-                    inputProps={{ max: walletBalance }}
+                    helperText={`Available: $${walletBalance.toFixed(2)} | Minimum: $10.00`}
+                    inputProps={{ min: 10, max: walletBalance, step: 0.01 }}
+                    error={withdrawAmount ? (parseFloat(withdrawAmount) < 10 || parseFloat(withdrawAmount) > walletBalance) : false}
                   />
 
                   <FormControl fullWidth>
                     <InputLabel>Withdrawal Method</InputLabel>
                     <Select
-                      value={withdrawMethod}
+                      value={withdrawMethod || ''}
                       label="Withdrawal Method"
                       onChange={(e) => setWithdrawMethod(e.target.value)}
                     >
-                      <MenuItem value="bank">Bank Transfer</MenuItem>
-                      <MenuItem value="paypal">PayPal</MenuItem>
-                      <MenuItem value="stripe">Stripe</MenuItem>
+                      {paymentMethods.length > 0 ? (
+                        paymentMethods
+                          .filter(method => method.is_active)
+                          .map((method) => (
+                            <MenuItem key={method.id} value={method.type}>
+                              {method.type === 'bank'
+                                ? `${method.bank_name || 'Bank'} - ****${method.account_number?.slice(-4) || ''}${method.is_default ? ' (Default)' : ''}`
+                                : method.type === 'paypal'
+                                ? `PayPal - ${method.email}${method.is_default ? ' (Default)' : ''}`
+                                : `Stripe${method.is_default ? ' (Default)' : ''}`}
+                            </MenuItem>
+                          ))
+                      ) : (
+                        <>
+                          <MenuItem value="bank">Bank Transfer</MenuItem>
+                          <MenuItem value="paypal">PayPal</MenuItem>
+                          <MenuItem value="stripe">Stripe</MenuItem>
+                        </>
+                      )}
                     </Select>
+                    {paymentMethods.length === 0 && (
+                      <Typography variant="caption" color="text.secondary" sx={{ mt: 1 }}>
+                        <Button
+                          variant="text"
+                          size="small"
+                          onClick={() => setActiveTab(3)}
+                          sx={{ p: 0, minWidth: 'auto', textTransform: 'none' }}
+                        >
+                          Add a payment method
+                        </Button>{' '}
+                        to save your withdrawal details
+                      </Typography>
+                    )}
                   </FormControl>
 
                   <Alert severity="info" icon={<Iconify icon="solar:info-circle-bold-duotone" />}>
@@ -448,20 +720,425 @@ export const Wallet: React.FC = () => {
                     </Typography>
                   </Alert>
 
+                  {user?.kycStatus !== 'verified' && (
+                    <Alert severity="warning">
+                      <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                        KYC Verification Required
+                      </Typography>
+                      <Typography variant="body2" sx={{ mb: 1 }}>
+                        You must complete identity verification before making withdrawals.
+                      </Typography>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        component="a"
+                        href="/kyc"
+                        sx={{ mt: 1 }}
+                      >
+                        Complete Verification
+                      </Button>
+                    </Alert>
+                  )}
+
                   <Button
                     variant="contained"
                     size="large"
                     fullWidth
                     onClick={handleWithdraw}
-                    disabled={!withdrawAmount || parseFloat(withdrawAmount) <= 0 || parseFloat(withdrawAmount) > walletBalance}
+                    disabled={
+                      isSubmitting ||
+                      !withdrawAmount ||
+                      parseFloat(withdrawAmount) <= 0 ||
+                      parseFloat(withdrawAmount) > walletBalance ||
+                      parseFloat(withdrawAmount) < 10 ||
+                      user?.kycStatus !== 'verified'
+                    }
+                    startIcon={isSubmitting ? <CircularProgress size={16} /> : null}
                   >
-                    Request Withdrawal
+                    {isSubmitting ? 'Submitting...' : 'Request Withdrawal'}
                   </Button>
                 </Stack>
+
+                {/* Withdrawal History */}
+                {withdrawalRequests.length > 0 && (
+                  <Box sx={{ mt: 4 }}>
+                    <Typography variant="h6" fontWeight={700} gutterBottom>
+                      Withdrawal History
+                    </Typography>
+                    <Card variant="outlined">
+                      <TableContainer>
+                        <Table>
+                          <TableHead>
+                            <TableRow>
+                              <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>Amount</TableCell>
+                              <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>Method</TableCell>
+                              <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>Status</TableCell>
+                              <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>Date</TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {withdrawalRequests.map((request) => (
+                              <TableRow key={request.id}>
+                                <TableCell>
+                                  <Typography variant="body2" fontWeight={600}>
+                                    ${request.amount.toFixed(2)}
+                                  </Typography>
+                                </TableCell>
+                                <TableCell>
+                                  <Chip
+                                    label={request.payment_method}
+                                    size="small"
+                                    variant="outlined"
+                                  />
+                                </TableCell>
+                                <TableCell>{getStatusChip(request.status)}</TableCell>
+                                <TableCell>
+                                  <Typography variant="body2" color="text.secondary">
+                                    {format(parseISO(request.created_at), 'MMM dd, yyyy')}
+                                  </Typography>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </Card>
+                  </Box>
+                )}
+              </Stack>
+            )}
+
+            {/* Payment Methods Tab */}
+            {activeTab === 3 && (
+              <Stack spacing={4}>
+                <Box>
+                  <Stack direction="row" alignItems="center" justifyContent="space-between">
+                    <Box>
+                      <Typography variant="h6" fontWeight={700} gutterBottom>
+                        Payment Methods
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Manage your payment methods for withdrawals
+                      </Typography>
+                    </Box>
+                    <Button
+                      variant="contained"
+                      startIcon={<Plus size={20} />}
+                      onClick={() => {
+                        setEditingPaymentMethod(null);
+                        setPaymentMethodForm({
+                          type: 'bank',
+                          account_name: '',
+                          account_number: '',
+                          routing_number: '',
+                          bank_name: '',
+                          email: '',
+                          is_default: false,
+                        });
+                        setPaymentMethodDialogOpen(true);
+                      }}
+                    >
+                      Add Payment Method
+                    </Button>
+                  </Stack>
+                </Box>
+
+                {paymentMethods.length === 0 ? (
+                  <Card variant="outlined">
+                    <CardContent>
+                      <Stack spacing={2} alignItems="center" sx={{ py: 4 }}>
+                        <Iconify icon="solar:card-bold-duotone" width={64} sx={{ color: 'text.disabled' }} />
+                        <Typography variant="h6" color="text.secondary">
+                          No Payment Methods
+                        </Typography>
+                        <Typography variant="body2" color="text.disabled" align="center">
+                          Add a payment method to receive withdrawals
+                        </Typography>
+                        <Button
+                          variant="outlined"
+                          startIcon={<Plus size={18} />}
+                          onClick={() => {
+                            setEditingPaymentMethod(null);
+                            setPaymentMethodForm({
+                              type: 'bank',
+                              account_name: '',
+                              account_number: '',
+                              routing_number: '',
+                              bank_name: '',
+                              email: '',
+                              is_default: false,
+                            });
+                            setPaymentMethodDialogOpen(true);
+                          }}
+                        >
+                          Add Payment Method
+                        </Button>
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Stack spacing={2}>
+                    {paymentMethods.map((method) => (
+                      <Card key={method.id} variant="outlined">
+                        <CardContent>
+                          <Stack direction="row" alignItems="center" justifyContent="space-between">
+                            <Stack direction="row" alignItems="center" spacing={2} sx={{ flex: 1 }}>
+                              <Avatar
+                                sx={{
+                                  bgcolor: alpha(theme.palette.primary.main, 0.12),
+                                  color: 'primary.main',
+                                }}
+                              >
+                                <Iconify
+                                  icon={
+                                    method.type === 'bank'
+                                      ? 'solar:bank-bold-duotone'
+                                      : method.type === 'paypal'
+                                      ? 'solar:wallet-bold-duotone'
+                                      : 'solar:card-bold-duotone'
+                                  }
+                                  width={24}
+                                />
+                              </Avatar>
+                              <Box sx={{ flex: 1 }}>
+                                <Stack direction="row" alignItems="center" spacing={1}>
+                                  <Typography variant="body2" fontWeight={600}>
+                                    {method.type === 'bank'
+                                      ? `${method.bank_name || 'Bank Account'} - ****${method.account_number?.slice(-4) || ''}`
+                                      : method.type === 'paypal'
+                                      ? `PayPal - ${method.email || 'N/A'}`
+                                      : `Stripe - ${method.account_id || 'N/A'}`}
+                                  </Typography>
+                                  {method.is_default && (
+                                    <Chip label="Default" color="primary" size="small" />
+                                  )}
+                                </Stack>
+                                {method.account_name && (
+                                  <Typography variant="caption" color="text.secondary">
+                                    {method.account_name}
+                                  </Typography>
+                                )}
+                              </Box>
+                            </Stack>
+                            <Stack direction="row" spacing={1}>
+                              <IconButton
+                                size="small"
+                                onClick={() => {
+                                  setEditingPaymentMethod(method);
+                                  setPaymentMethodForm({
+                                    type: method.type,
+                                    account_name: method.account_name || '',
+                                    account_number: method.account_number || '',
+                                    routing_number: method.routing_number || '',
+                                    bank_name: method.bank_name || '',
+                                    email: method.email || '',
+                                    is_default: method.is_default,
+                                  });
+                                  setPaymentMethodDialogOpen(true);
+                                }}
+                              >
+                                <Iconify icon="solar:pen-bold-duotone" width={20} />
+                              </IconButton>
+                              <IconButton
+                                size="small"
+                                color="error"
+                                onClick={async () => {
+                                  if (window.confirm('Are you sure you want to delete this payment method?')) {
+                                    try {
+                                      const { error } = await supabase
+                                        .from('payment_methods')
+                                        .update({ is_active: false })
+                                        .eq('id', method.id);
+
+                                      if (error) throw error;
+                                      toast.success('Payment method deleted');
+                                      await fetchWalletData();
+                                    } catch (error: any) {
+                                      toast.error(error.message || 'Failed to delete payment method');
+                                    }
+                                  }
+                                }}
+                              >
+                                <Trash2 size={18} />
+                              </IconButton>
+                            </Stack>
+                          </Stack>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </Stack>
+                )}
               </Stack>
             )}
           </CardContent>
         </Card>
+
+        {/* Payment Method Dialog */}
+        <Dialog open={paymentMethodDialogOpen} onClose={() => setPaymentMethodDialogOpen(false)} maxWidth="sm" fullWidth>
+          <DialogTitle>
+            <Stack direction="row" alignItems="center" justifyContent="space-between">
+              <Typography variant="h6" fontWeight={700}>
+                {editingPaymentMethod ? 'Edit Payment Method' : 'Add Payment Method'}
+              </Typography>
+              <IconButton onClick={() => setPaymentMethodDialogOpen(false)} size="small">
+                <X size={20} />
+              </IconButton>
+            </Stack>
+          </DialogTitle>
+          <DialogContent>
+            <Stack spacing={3} sx={{ mt: 1 }}>
+              <FormControl fullWidth>
+                <InputLabel>Payment Method Type</InputLabel>
+                <Select
+                  value={paymentMethodForm.type}
+                  label="Payment Method Type"
+                  onChange={(e) =>
+                    setPaymentMethodForm({ ...paymentMethodForm, type: e.target.value as typeof paymentMethodForm.type })
+                  }
+                >
+                  <MenuItem value="bank">Bank Transfer</MenuItem>
+                  <MenuItem value="paypal">PayPal</MenuItem>
+                  <MenuItem value="stripe">Stripe</MenuItem>
+                </Select>
+              </FormControl>
+
+              {paymentMethodForm.type === 'bank' && (
+                <>
+                  <TextField
+                    fullWidth
+                    label="Account Holder Name"
+                    value={paymentMethodForm.account_name}
+                    onChange={(e) => setPaymentMethodForm({ ...paymentMethodForm, account_name: e.target.value })}
+                    required
+                  />
+                  <TextField
+                    fullWidth
+                    label="Bank Name"
+                    value={paymentMethodForm.bank_name}
+                    onChange={(e) => setPaymentMethodForm({ ...paymentMethodForm, bank_name: e.target.value })}
+                    required
+                  />
+                  <TextField
+                    fullWidth
+                    label="Account Number"
+                    value={paymentMethodForm.account_number}
+                    onChange={(e) => setPaymentMethodForm({ ...paymentMethodForm, account_number: e.target.value })}
+                    required
+                    inputProps={{ maxLength: 20 }}
+                  />
+                  <TextField
+                    fullWidth
+                    label="Routing Number"
+                    value={paymentMethodForm.routing_number}
+                    onChange={(e) => setPaymentMethodForm({ ...paymentMethodForm, routing_number: e.target.value })}
+                    required
+                    inputProps={{ maxLength: 9 }}
+                  />
+                </>
+              )}
+
+              {paymentMethodForm.type === 'paypal' && (
+                <TextField
+                  fullWidth
+                  label="PayPal Email"
+                  type="email"
+                  value={paymentMethodForm.email}
+                  onChange={(e) => setPaymentMethodForm({ ...paymentMethodForm, email: e.target.value })}
+                  required
+                />
+              )}
+
+              {paymentMethodForm.type === 'stripe' && (
+                <Alert severity="info">
+                  Stripe payment methods are connected through Stripe Connect. You'll need to complete the Stripe onboarding process.
+                </Alert>
+              )}
+
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={paymentMethodForm.is_default}
+                    onChange={(e) => setPaymentMethodForm({ ...paymentMethodForm, is_default: e.target.checked })}
+                  />
+                }
+                label="Set as default payment method"
+              />
+            </Stack>
+          </DialogContent>
+          <DialogActions sx={{ p: 3, pt: 2 }}>
+            <Button onClick={() => setPaymentMethodDialogOpen(false)} disabled={isSavingPaymentMethod}>
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              onClick={async () => {
+                // Validate form
+                if (paymentMethodForm.type === 'bank') {
+                  if (!paymentMethodForm.account_name || !paymentMethodForm.bank_name || !paymentMethodForm.account_number || !paymentMethodForm.routing_number) {
+                    toast.error('Please fill in all required fields');
+                    return;
+                  }
+                } else if (paymentMethodForm.type === 'paypal') {
+                  if (!paymentMethodForm.email) {
+                    toast.error('Please enter your PayPal email');
+                    return;
+                  }
+                }
+
+                setIsSavingPaymentMethod(true);
+                try {
+                  const { user } = useAuthStore.getState();
+                  if (!user) throw new Error('Not authenticated');
+
+                  const paymentMethodData: any = {
+                    user_id: user.id,
+                    type: paymentMethodForm.type,
+                    is_default: paymentMethodForm.is_default,
+                    is_active: true,
+                  };
+
+                  if (paymentMethodForm.type === 'bank') {
+                    paymentMethodData.account_name = paymentMethodForm.account_name;
+                    paymentMethodData.bank_name = paymentMethodForm.bank_name;
+                    paymentMethodData.account_number = paymentMethodForm.account_number;
+                    paymentMethodData.routing_number = paymentMethodForm.routing_number;
+                  } else if (paymentMethodForm.type === 'paypal') {
+                    paymentMethodData.email = paymentMethodForm.email;
+                  }
+
+                  if (editingPaymentMethod) {
+                    // Update existing
+                    const { error } = await supabase
+                      .from('payment_methods')
+                      .update(paymentMethodData)
+                      .eq('id', editingPaymentMethod.id);
+
+                    if (error) throw error;
+                    toast.success('Payment method updated');
+                  } else {
+                    // Create new
+                    const { error } = await supabase.from('payment_methods').insert(paymentMethodData);
+
+                    if (error) throw error;
+                    toast.success('Payment method added');
+                  }
+
+                  setPaymentMethodDialogOpen(false);
+                  await fetchWalletData();
+                } catch (error: any) {
+                  console.error('Error saving payment method:', error);
+                  toast.error(error.message || 'Failed to save payment method');
+                } finally {
+                  setIsSavingPaymentMethod(false);
+                }
+              }}
+              disabled={isSavingPaymentMethod}
+              startIcon={isSavingPaymentMethod ? <CircularProgress size={16} /> : null}
+            >
+              {isSavingPaymentMethod ? 'Saving...' : editingPaymentMethod ? 'Update' : 'Add'}
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Stack>
     </DashboardContent>
   );

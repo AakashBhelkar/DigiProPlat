@@ -23,10 +23,15 @@ export function BaseOption({ icon, label, tooltip, selected, ...other }) {
         cursor: 'pointer',
         flexDirection: 'column',
         alignItems: 'flex-start',
-        border: (theme) => `solid 1px ${varAlpha(theme.vars.palette.grey['500Channel'], 0.12)}`,
-        '&:hover': { bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.08) },
+        bgcolor: 'background.paper',
+        border: (theme) => `solid 1px ${varAlpha(theme.vars.palette.grey['500Channel'], 0.24)}`,
+        '&:hover': { 
+          bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.08),
+          borderColor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.32),
+        },
         ...(selected && {
           bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.08),
+          borderColor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.32),
         }),
       }}
       {...other}
@@ -48,6 +53,7 @@ export function BaseOption({ icon, label, tooltip, selected, ...other }) {
             lineHeight: '18px',
             fontWeight: 'fontWeightSemiBold',
             fontSize: (theme) => theme.typography.pxToRem(13),
+            color: 'text.primary',
           }}
         >
           {label}

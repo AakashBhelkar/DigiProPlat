@@ -136,7 +136,7 @@ export const ReviewSystem: React.FC<ReviewSystemProps> = ({
           <div className="mt-6 pt-6 border-t border-gray-200">
             <button
               onClick={() => setShowReviewForm(true)}
-              className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+              className="bg-primary text-primary-foreground px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors"
             >
               Write a Review
             </button>
@@ -190,7 +190,7 @@ export const ReviewSystem: React.FC<ReviewSystemProps> = ({
                 type="text"
                 value={newReview.title}
                 onChange={(e) => setNewReview(prev => ({ ...prev, title: e.target.value }))}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                 placeholder="Summarize your experience"
               />
             </div>
@@ -204,7 +204,7 @@ export const ReviewSystem: React.FC<ReviewSystemProps> = ({
                 value={newReview.content}
                 onChange={(e) => setNewReview(prev => ({ ...prev, content: e.target.value }))}
                 rows={4}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                 placeholder="Share your thoughts about this product..."
               />
             </div>
@@ -220,7 +220,7 @@ export const ReviewSystem: React.FC<ReviewSystemProps> = ({
               <button
                 onClick={handleSubmitReview}
                 disabled={!newReview.title.trim() || !newReview.content.trim()}
-                className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Submit Review
               </button>
@@ -239,7 +239,7 @@ export const ReviewSystem: React.FC<ReviewSystemProps> = ({
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-primary focus:border-primary"
             >
               <option value="newest">Newest First</option>
               <option value="oldest">Oldest First</option>

@@ -17,15 +17,15 @@ export function NavOptions({ options, value, onClickOption, hideNavColor, hideNa
   const cssVars = {
     '--item-radius': '12px',
     '--item-bg': theme.vars.palette.grey[500],
-    '--item-border-color': varAlpha(theme.vars.palette.grey['500Channel'], 0.08),
+    '--item-border-color': varAlpha(theme.vars.palette.grey['500Channel'], 0.24),
     '--item-active-color': `linear-gradient(135deg, ${theme.vars.palette.primary.light} 0%, ${theme.vars.palette.primary.main} 100%)`,
     '--item-active-shadow-light': `-8px 8px 20px -4px ${varAlpha(
       theme.vars.palette.grey['500Channel'],
-      0.12
+      0.16
     )}`,
     '--item-active-shadow-dark': `-8px 8px 20px -4px ${varAlpha(
       theme.vars.palette.common.blackChannel,
-      0.12
+      0.16
     )}`,
   };
 
@@ -84,6 +84,8 @@ export function NavOptions({ options, value, onClickOption, hideNavColor, hideNa
 // ----------------------------------------------------------------------
 
 export function LayoutOption({ option, selected, sx, ...other }) {
+  const theme = useTheme();
+  
   const renderNav = () => {
     const baseStyles = {
       flexShrink: 0,
@@ -187,13 +189,18 @@ export function LayoutOption({ option, selected, sx, ...other }) {
       sx={{
         width: 1,
         height: 64,
+        bgcolor: 'background.paper',
         borderWidth: 1,
         borderStyle: 'solid',
         borderRadius: 'var(--item-radius)',
         borderColor: 'var(--item-border-color)',
         ...(option === 'horizontal' && { flexDirection: 'column' }),
+        '&:hover': {
+          borderColor: varAlpha(theme.vars.palette.grey['500Channel'], 0.32),
+        },
         ...(selected && {
           boxShadow: 'var(--item-active-shadow-light)',
+          borderColor: varAlpha(theme.vars.palette.grey['500Channel'], 0.32),
           [stylesMode.dark]: {
             boxShadow: 'var(--item-active-shadow-dark)',
           },
@@ -211,6 +218,8 @@ export function LayoutOption({ option, selected, sx, ...other }) {
 // ----------------------------------------------------------------------
 
 export function ColorOption({ option, selected, sx, ...other }) {
+  const theme = useTheme();
+  
   return (
     <ButtonBase
       disableRipple
@@ -218,8 +227,16 @@ export function ColorOption({ option, selected, sx, ...other }) {
         gap: 1.5,
         width: 1,
         height: 56,
-        color: 'text.disabled',
+        bgcolor: 'background.paper',
+        color: 'text.secondary',
         borderRadius: 'var(--item-radius)',
+        borderWidth: 1,
+        borderStyle: 'solid',
+        borderColor: 'transparent',
+        '&:hover': {
+          color: 'text.primary',
+          borderColor: varAlpha(theme.vars.palette.grey['500Channel'], 0.24),
+        },
         ...(selected && {
           borderWidth: 1,
           borderStyle: 'solid',

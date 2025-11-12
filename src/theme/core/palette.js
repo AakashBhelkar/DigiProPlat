@@ -30,8 +30,8 @@ export const common = createPaletteChannel(COLORS.common);
 // Text
 export const text = {
   light: createPaletteChannel({
-    primary: grey[800],
-    secondary: grey[600],
+    primary: '#134e4a', // Dark teal text
+    secondary: '#0f766e', // Medium teal
     disabled: grey[500],
   }),
   dark: createPaletteChannel({
@@ -45,8 +45,8 @@ export const text = {
 export const background = {
   light: createPaletteChannel({
     paper: '#FFFFFF',
-    default: '#FFFFFF',
-    neutral: grey[200],
+    default: '#f0fdfa', // Light teal background
+    neutral: '#e6fffa', // Lighter teal
   }),
   dark: createPaletteChannel({
     paper: grey[800],

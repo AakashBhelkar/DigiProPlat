@@ -57,7 +57,7 @@ export const ContentModeration: React.FC = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -84,7 +84,7 @@ export const ContentModeration: React.FC = () => {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as 'all' | 'pending' | 'reviewing' | 'resolved' | 'dismissed')}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
             >
               <option value="all">All Status</option>
               <option value="pending">Pending</option>
@@ -95,7 +95,7 @@ export const ContentModeration: React.FC = () => {
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value as 'all' | 'spam' | 'inappropriate' | 'copyright' | 'fraud' | 'other')}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
             >
               <option value="all">All Types</option>
               <option value="spam">Spam</option>
@@ -127,7 +127,7 @@ export const ContentModeration: React.FC = () => {
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900 capitalize">
+                      <h3 className="text-lg font-semibold text-primary capitalize">
                         {report.type} Report
                       </h3>
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(report.status)}`}>
@@ -200,7 +200,7 @@ export const ContentModeration: React.FC = () => {
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle className="h-8 w-8 text-gray-400" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No reports found</h3>
+          <h3 className="text-lg font-medium text-primary mb-2">No reports found</h3>
           <p className="text-gray-600">
             {statusFilter === 'pending' 
               ? 'All reports have been reviewed!' 

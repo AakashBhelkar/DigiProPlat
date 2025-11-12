@@ -210,8 +210,8 @@ What specific area would you like to focus on?`;
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center space-x-3">
-          <div className="p-2 bg-purple-100 rounded-lg">
-            <Sparkles className="h-6 w-6 text-purple-600" />
+          <div className="p-2 bg-primary/20 rounded-lg">
+            <Sparkles className="h-6 w-6 text-primary" />
           </div>
           <div>
             <h1 className="text-xl font-semibold text-gray-900">AI Assistant</h1>
@@ -232,10 +232,10 @@ What specific area would you like to focus on?`;
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
                 onClick={() => handleQuickAction(action.prompt)}
-                className="flex items-start space-x-3 p-4 bg-white rounded-lg border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-all text-left"
+                className="flex items-start space-x-3 p-4 bg-white rounded-lg border border-gray-200 hover:border-primary/40 hover:bg-primary/10 transition-all text-left"
               >
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <action.icon className="h-5 w-5 text-purple-600" />
+                <div className="p-2 bg-primary/20 rounded-lg">
+                  <action.icon className="h-5 w-5 text-primary" />
                 </div>
                 <div>
                   <h4 className="text-sm font-medium text-gray-900">{action.title}</h4>
@@ -259,23 +259,23 @@ What specific area would you like to focus on?`;
           >
             <div className={`max-w-3xl ${message.type === 'user' ? 'order-2' : 'order-1'}`}>
               <div className={`flex items-start space-x-3 ${message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                <div className={`p-2 rounded-full ${message.type === 'user' ? 'bg-indigo-100' : 'bg-purple-100'}`}>
+                <div className={`p-2 rounded-full ${message.type === 'user' ? 'bg-primary/20' : 'bg-primary/20'}`}>
                   {message.type === 'user' ? (
-                    <div className="w-6 h-6 bg-indigo-500 rounded-full flex items-center justify-center">
-                      <span className="text-xs font-medium text-white">U</span>
+                    <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                      <span className="text-xs font-medium text-primary-foreground">U</span>
                     </div>
                   ) : (
-                    <Sparkles className="h-6 w-6 text-purple-600" />
+                    <Sparkles className="h-6 w-6 text-primary" />
                   )}
                 </div>
                 <div className={`p-4 rounded-lg ${
                   message.type === 'user' 
-                    ? 'bg-indigo-600 text-white' 
+                    ? 'bg-primary text-primary-foreground' 
                     : 'bg-white border border-gray-200'
                 }`}>
                   <div className="whitespace-pre-wrap text-sm">{message.content}</div>
                   <div className={`text-xs mt-2 ${
-                    message.type === 'user' ? 'text-indigo-200' : 'text-gray-500'
+                    message.type === 'user' ? 'text-primary-foreground/80' : 'text-gray-500'
                   }`}>
                     {message.timestamp.toLocaleTimeString()}
                   </div>
@@ -288,8 +288,8 @@ What specific area would you like to focus on?`;
         {isTyping && (
           <div className="flex justify-start">
             <div className="flex items-start space-x-3">
-              <div className="p-2 bg-purple-100 rounded-full">
-                <Sparkles className="h-6 w-6 text-purple-600" />
+              <div className="p-2 bg-primary/20 rounded-full">
+                <Sparkles className="h-6 w-6 text-primary" />
               </div>
               <div className="p-4 bg-white border border-gray-200 rounded-lg">
                 <div className="flex space-x-1">
@@ -313,13 +313,13 @@ What specific area would you like to focus on?`;
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSendMessage(inputMessage)}
               placeholder="Ask me anything about your digital products..."
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 pr-12"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary pr-12"
               disabled={isTyping}
             />
             <button
               onClick={() => handleSendMessage(inputMessage)}
               disabled={!inputMessage.trim() || isTyping}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Send className="h-4 w-4" />
             </button>

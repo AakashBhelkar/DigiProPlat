@@ -109,7 +109,7 @@ export const CouponSystem: React.FC<CouponSystemProps> = ({
         </div>
         <button
           onClick={() => setShowCreateForm(true)}
-          className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center space-x-2"
+          className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors flex items-center space-x-2"
         >
           <Plus className="h-5 w-5" />
           <span>Create Coupon</span>
@@ -146,7 +146,7 @@ export const CouponSystem: React.FC<CouponSystemProps> = ({
                 {coupons.reduce((sum, c) => sum + c.usageCount, 0)}
               </p>
             </div>
-            <Users className="h-8 w-8 text-purple-600" />
+            <Users className="h-8 w-8 text-primary" />
           </div>
         </div>
 
@@ -180,7 +180,7 @@ export const CouponSystem: React.FC<CouponSystemProps> = ({
                   type="text"
                   value={newCoupon.code}
                   onChange={(e) => setNewCoupon(prev => ({ ...prev, code: e.target.value.toUpperCase() }))}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                   placeholder="SAVE20"
                 />
                 <button
@@ -199,7 +199,7 @@ export const CouponSystem: React.FC<CouponSystemProps> = ({
               <select
                 value={newCoupon.type}
                 onChange={(e) => setNewCoupon(prev => ({ ...prev, type: e.target.value as 'percentage' | 'fixed' }))}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
               >
                 <option value="percentage">Percentage</option>
                 <option value="fixed">Fixed Amount</option>
@@ -215,7 +215,7 @@ export const CouponSystem: React.FC<CouponSystemProps> = ({
                   type="number"
                   value={newCoupon.value}
                   onChange={(e) => setNewCoupon(prev => ({ ...prev, value: parseFloat(e.target.value) || 0 }))}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                   min="0"
                   step={newCoupon.type === 'percentage' ? '1' : '0.01'}
                 />
@@ -240,7 +240,7 @@ export const CouponSystem: React.FC<CouponSystemProps> = ({
                   ...prev, 
                   usageLimit: e.target.value ? parseInt(e.target.value) : undefined 
                 }))}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                 placeholder="Unlimited"
                 min="1"
               />
@@ -254,7 +254,7 @@ export const CouponSystem: React.FC<CouponSystemProps> = ({
                 type="datetime-local"
                 value={newCoupon.expiresAt}
                 onChange={(e) => setNewCoupon(prev => ({ ...prev, expiresAt: e.target.value }))}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
               />
             </div>
 
@@ -266,7 +266,7 @@ export const CouponSystem: React.FC<CouponSystemProps> = ({
                 type="text"
                 value={newCoupon.description}
                 onChange={(e) => setNewCoupon(prev => ({ ...prev, description: e.target.value }))}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                 placeholder="Save 20% on all templates"
               />
             </div>
@@ -282,7 +282,7 @@ export const CouponSystem: React.FC<CouponSystemProps> = ({
             <button
               onClick={handleCreateCoupon}
               disabled={!newCoupon.code.trim() || !newCoupon.description.trim()}
-              className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Create Coupon
             </button>
@@ -381,7 +381,7 @@ export const CouponSystem: React.FC<CouponSystemProps> = ({
             </p>
             <button
               onClick={() => setShowCreateForm(true)}
-              className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors"
+              className="bg-primary text-primary-foreground px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors"
             >
               Create Your First Coupon
             </button>

@@ -182,7 +182,40 @@ const MuiFab = {
   /** **************************************
    * STYLE
    *************************************** */
-  styleOverrides: {},
+  styleOverrides: {
+    root: ({ theme, ownerState }) => {
+      // White background, black border, black icon for all FAB variants
+      return {
+        backgroundColor: '#FFFFFF',
+        color: '#000000',
+        border: '1px solid #000000',
+        borderColor: '#000000',
+        '& .MuiSvgIcon-root': {
+          color: '#000000',
+        },
+        '&:hover': {
+          backgroundColor: '#F5F5F5',
+          borderColor: '#000000',
+          color: '#000000',
+          '& .MuiSvgIcon-root': {
+            color: '#000000',
+          },
+        },
+        '&:active': {
+          backgroundColor: '#E0E0E0',
+          borderColor: '#000000',
+        },
+        '&.Mui-disabled': {
+          backgroundColor: '#FFFFFF',
+          color: 'rgba(0, 0, 0, 0.26)',
+          borderColor: 'rgba(0, 0, 0, 0.12)',
+          '& .MuiSvgIcon-root': {
+            color: 'rgba(0, 0, 0, 0.26)',
+          },
+        },
+      };
+    },
+  },
 };
 
 // ----------------------------------------------------------------------

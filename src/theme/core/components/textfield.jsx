@@ -52,7 +52,8 @@ const MuiOutlinedInput = {
    *************************************** */
   styleOverrides: {
     root: ({ theme }) => ({
-      backgroundColor: '#FFFFFF', // Force white background for light mode
+      backgroundColor: '#FFFFFF',
+      color: '#134e4a',
       [`&.${outlinedInputClasses.focused}`]: {
         [`& .${outlinedInputClasses.notchedOutline}`]: {
           borderColor: theme.vars.palette.text.primary,
@@ -70,10 +71,16 @@ const MuiOutlinedInput = {
       },
     }),
     notchedOutline: ({ theme }) => ({
-      borderColor: varAlpha(theme.vars.palette.grey['500Channel'], 0.2),
+      borderColor: 'rgba(19, 78, 74, 0.2)',
       transition: theme.transitions.create(['border-color'], {
         duration: theme.transitions.duration.shortest,
       }),
+    }),
+    input: ({ theme }) => ({
+      color: '#134e4a',
+      '&::placeholder': {
+        color: 'rgba(19, 78, 74, 0.5)',
+      },
     }),
   },
 };

@@ -32,16 +32,38 @@ serve(async (req) => {
 
         console.log('Processing checkout session:', session.id);
 
-        // Create order in database
+        // Get buyer and seller IDs
+        const buyerId = session.client_reference_id || session.metadata?.buyerId;
+        const sellerId = session.metadata?.sellerId;
+        const productId = session.metadata?.productId;
+        const amount = session.amount_total! / 100;
+
+        // Fetch product details to get price
+        const { data: product, error: productFetchError } = await supabase
+          .from('products')
+          .select('id, title, price, user_id')
+          .eq('id', productId)
+          .single();
+
+        if (productFetchError || !product) {
+          console.error('Error fetching product:', productFetchError);
+          throw new Error('Product not found');
+        }
+
+        // Create order in database with correct structure
         const { data: order, error: orderError } = await supabase
           .from('orders')
           .insert({
-            product_id: session.metadata?.productId,
-            buyer_id: session.client_reference_id || session.metadata?.buyerId,
-            amount: (session.amount_total! / 100),
+            customer_id: buyerId,
+            seller_id: sellerId || product.user_id,
+            customer_email: session.customer_email || session.customer_details?.email || '',
+            customer_name: session.customer_details?.name || '',
+            total_amount: amount,
+            currency: session.currency?.toUpperCase() || 'USD',
             status: 'completed',
-            stripe_session_id: session.id,
+            payment_method: 'stripe',
             payment_intent_id: session.payment_intent as string,
+            completed_at: new Date().toISOString(),
           })
           .select()
           .single();
@@ -53,10 +75,26 @@ serve(async (req) => {
 
         console.log('Order created:', order.id);
 
+        // Create order item
+        const { error: orderItemError } = await supabase
+          .from('order_items')
+          .insert({
+            order_id: order.id,
+            product_id: productId,
+            quantity: 1,
+            unit_price: product.price || amount,
+            total_price: amount,
+          });
+
+        if (orderItemError) {
+          console.error('Error creating order item:', orderItemError);
+          // Don't throw - order is already created
+        }
+
         // Update product sales count and revenue
         const { error: productError } = await supabase.rpc('increment_product_sales', {
-          p_product_id: session.metadata?.productId,
-          p_amount: (session.amount_total! / 100),
+          p_product_id: productId,
+          p_amount: amount,
         });
 
         if (productError) {
@@ -64,17 +102,143 @@ serve(async (req) => {
         }
 
         // Update seller wallet balance
+        const finalSellerId = sellerId || product.user_id;
         const { error: walletError } = await supabase.rpc('add_to_wallet', {
-          p_user_id: session.metadata?.sellerId,
-          p_amount: (session.amount_total! / 100) * 0.9, // 90% to seller, 10% platform fee
+          p_user_id: finalSellerId,
+          p_amount: amount * 0.9, // 90% to seller, 10% platform fee
         });
 
         if (walletError) {
           console.error('Error updating wallet:', walletError);
         }
 
-        // TODO: Send email notification with download links
-        console.log('Payment successful for product:', session.metadata?.productId);
+        // Product details already fetched above
+
+        // Fetch buyer email
+        let buyerEmail = session.customer_email;
+        let buyerName = 'Customer';
+        if (buyerId && !buyerEmail) {
+          const { data: buyerProfile } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('id', buyerId)
+            .single();
+          
+          if (buyerProfile) {
+            const { data: authUser } = await supabase.auth.admin.getUserById(buyerId);
+            if (authUser?.user?.email) {
+              buyerEmail = authUser.user.email;
+              buyerName = authUser.user.user_metadata?.full_name || authUser.user.email.split('@')[0];
+            }
+          }
+        }
+
+        // Fetch seller email
+        let sellerEmail = '';
+        let sellerName = 'Seller';
+        if (sellerId) {
+          const { data: sellerProfile } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('id', sellerId)
+            .single();
+          
+          if (sellerProfile) {
+            const { data: authUser } = await supabase.auth.admin.getUserById(sellerId);
+            if (authUser?.user?.email) {
+              sellerEmail = authUser.user.email;
+              sellerName = authUser.user.user_metadata?.full_name || authUser.user.email.split('@')[0];
+            }
+          }
+        }
+
+        // Generate download links
+        let downloadLinks: string[] = [];
+        try {
+          const downloadResponse = await fetch(`${supabaseUrl}/functions/v1/generate-download-links`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${supabaseServiceKey}`,
+            },
+            body: JSON.stringify({
+              orderId: order.id,
+              expiresInDays: 7,
+              maxDownloads: 5,
+            }),
+          });
+
+          if (downloadResponse.ok) {
+            const downloadData = await downloadResponse.json();
+            downloadLinks = downloadData.downloadLinks?.map((link: any) => link.downloadUrl) || [];
+          } else {
+            console.error('Failed to generate download links, will send email without links');
+          }
+        } catch (downloadError) {
+          console.error('Error generating download links:', downloadError);
+          // Continue without download links - they can be generated later
+        }
+
+        // Send order confirmation email to buyer
+        if (buyerEmail) {
+          try {
+            const emailResponse = await fetch(`${supabaseUrl}/functions/v1/send-notification-email`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${supabaseServiceKey}`,
+              },
+              body: JSON.stringify({
+                to: buyerEmail,
+                subject: `Order Confirmation - ${product?.title || 'Your Purchase'}`,
+                type: 'order_confirmation',
+                data: {
+                  productName: product?.title || 'Product',
+                  orderId: order.id,
+                  amount,
+                  downloadLinks,
+                },
+              }),
+            });
+
+            if (!emailResponse.ok) {
+              console.error('Failed to send order confirmation email');
+            }
+          } catch (emailError) {
+            console.error('Error sending order confirmation email:', emailError);
+          }
+        }
+
+        // Send sale notification email to seller
+        if (sellerEmail && product) {
+          try {
+            const emailResponse = await fetch(`${supabaseUrl}/functions/v1/send-notification-email`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${supabaseServiceKey}`,
+              },
+              body: JSON.stringify({
+                to: sellerEmail,
+                subject: `New Sale: ${product.title}`,
+                type: 'sale_notification',
+                data: {
+                  productName: product.title,
+                  buyerName,
+                  amount,
+                },
+              }),
+            });
+
+            if (!emailResponse.ok) {
+              console.error('Failed to send sale notification email');
+            }
+          } catch (emailError) {
+            console.error('Error sending sale notification email:', emailError);
+          }
+        }
+
+        console.log('Payment successful for product:', productId);
 
         break;
       }
@@ -90,11 +254,29 @@ serve(async (req) => {
         console.log('PaymentIntent failed:', paymentIntent.id);
 
         // Create a failed order record
+        const failedBuyerId = paymentIntent.metadata?.buyerId;
+        const failedProductId = paymentIntent.metadata?.productId;
+        const failedAmount = paymentIntent.amount / 100;
+
+        // Fetch product to get seller ID
+        let failedSellerId = null;
+        if (failedProductId) {
+          const { data: failedProduct } = await supabase
+            .from('products')
+            .select('user_id')
+            .eq('id', failedProductId)
+            .single();
+          failedSellerId = failedProduct?.user_id;
+        }
+
         const { error } = await supabase.from('orders').insert({
-          product_id: paymentIntent.metadata?.productId,
-          buyer_id: paymentIntent.metadata?.buyerId,
-          amount: (paymentIntent.amount / 100),
+          customer_id: failedBuyerId,
+          seller_id: failedSellerId,
+          customer_email: paymentIntent.receipt_email || '',
+          total_amount: failedAmount,
+          currency: paymentIntent.currency?.toUpperCase() || 'USD',
           status: 'failed',
+          payment_method: 'stripe',
           payment_intent_id: paymentIntent.id,
         });
 

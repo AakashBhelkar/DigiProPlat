@@ -94,7 +94,7 @@ export const Header: React.FC = () => {
           ${drawerOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
         <div className="flex items-center justify-between px-4 py-4 border-b border-gray-200">
-          <span className="text-lg font-bold text-indigo-600">DigiProPlat</span>
+          <span className="text-lg font-bold text-primary">DigiProPlat</span>
           <button onClick={() => setDrawerOpen(false)} className="p-2 rounded-md hover:bg-gray-100">
             <X className="h-6 w-6 text-gray-700" />
           </button>
@@ -104,7 +104,7 @@ export const Header: React.FC = () => {
             <Link
               key={link.to}
               to={link.to}
-              className="text-gray-700 px-3 py-2 rounded-md hover:bg-indigo-50 text-base font-medium"
+              className="text-gray-700 px-3 py-2 rounded-md hover:bg-primary/10 text-base font-medium"
               onClick={() => setDrawerOpen(false)}
             >
               {link.label}
@@ -126,7 +126,7 @@ export const Header: React.FC = () => {
           {/* Hamburger for mobile */}
           <div className="flex items-center lg:hidden">
             <button
-              className="p-2 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="p-2 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary"
               onClick={() => setDrawerOpen(true)}
               aria-label="Open menu"
             >
@@ -144,7 +144,7 @@ export const Header: React.FC = () => {
                 <input
                   id="search"
                   name="search"
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
                   placeholder="Search products, pages..."
                   type="search"
                 />
@@ -165,7 +165,7 @@ export const Header: React.FC = () => {
 
             <div className="relative group">
               <button className="flex items-center space-x-3 p-2 rounded-md hover:bg-gray-50">
-                <div className="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
                   <span className="text-sm font-medium text-white">
                     {/* Robust initials fallback */}
                     {(user?.firstName?.[0] || user?.email?.[0] || '').toUpperCase()}{(user?.lastName?.[0] || '')}

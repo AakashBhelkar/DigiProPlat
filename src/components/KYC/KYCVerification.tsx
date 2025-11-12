@@ -97,7 +97,7 @@ export const KYCVerification: React.FC<KYCVerificationProps> = ({
         </p>
         <button
           onClick={() => setStep(1)}
-          className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+          className="bg-primary text-primary-foreground px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors"
         >
           Resubmit Verification
         </button>
@@ -117,7 +117,7 @@ export const KYCVerification: React.FC<KYCVerificationProps> = ({
                 key={stepNumber}
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
                   step >= stepNumber
-                    ? 'bg-indigo-600 text-white'
+                    ? 'bg-primary text-primary-foreground'
                     : 'bg-gray-200 text-gray-600'
                 }`}
               >
@@ -129,7 +129,7 @@ export const KYCVerification: React.FC<KYCVerificationProps> = ({
         <div className="mt-2">
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div 
-              className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
+              className="bg-primary h-2 rounded-full transition-all duration-300"
               style={{ width: `${(step / 3) * 100}%` }}
             ></div>
           </div>
@@ -153,7 +153,7 @@ export const KYCVerification: React.FC<KYCVerificationProps> = ({
                   <input
                     {...register('firstName', { required: 'First name is required' })}
                     type="text"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                   />
                   {errors.firstName && (
                     <p className="mt-1 text-sm text-red-600">{errors.firstName.message}</p>
@@ -167,7 +167,7 @@ export const KYCVerification: React.FC<KYCVerificationProps> = ({
                   <input
                     {...register('lastName', { required: 'Last name is required' })}
                     type="text"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                   />
                   {errors.lastName && (
                     <p className="mt-1 text-sm text-red-600">{errors.lastName.message}</p>
@@ -181,7 +181,7 @@ export const KYCVerification: React.FC<KYCVerificationProps> = ({
                   <input
                     {...register('dateOfBirth', { required: 'Date of birth is required' })}
                     type="date"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                   />
                   {errors.dateOfBirth && (
                     <p className="mt-1 text-sm text-red-600">{errors.dateOfBirth.message}</p>
@@ -194,7 +194,7 @@ export const KYCVerification: React.FC<KYCVerificationProps> = ({
                   </label>
                   <select
                     {...register('nationality', { required: 'Nationality is required' })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                   >
                     <option value="">Select Nationality</option>
                     <option value="US">United States</option>
@@ -216,7 +216,7 @@ export const KYCVerification: React.FC<KYCVerificationProps> = ({
                   <input
                     {...register('phoneNumber', { required: 'Phone number is required' })}
                     type="tel"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                   />
                   {errors.phoneNumber && (
                     <p className="mt-1 text-sm text-red-600">{errors.phoneNumber.message}</p>
@@ -230,7 +230,7 @@ export const KYCVerification: React.FC<KYCVerificationProps> = ({
                   <input
                     {...register('occupation', { required: 'Occupation is required' })}
                     type="text"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                   />
                   {errors.occupation && (
                     <p className="mt-1 text-sm text-red-600">{errors.occupation.message}</p>
@@ -243,7 +243,7 @@ export const KYCVerification: React.FC<KYCVerificationProps> = ({
               <button
                 type="button"
                 onClick={() => setStep(2)}
-                className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+                className="bg-primary text-primary-foreground px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors"
               >
                 Next Step
               </button>
@@ -267,7 +267,7 @@ export const KYCVerification: React.FC<KYCVerificationProps> = ({
                   <input
                     {...register('address.line1', { required: 'Address is required' })}
                     type="text"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                   />
                   {errors.address?.line1 && (
                     <p className="mt-1 text-sm text-red-600">{errors.address.line1.message}</p>
@@ -281,7 +281,7 @@ export const KYCVerification: React.FC<KYCVerificationProps> = ({
                   <input
                     {...register('address.line2')}
                     type="text"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                   />
                 </div>
 
@@ -293,7 +293,7 @@ export const KYCVerification: React.FC<KYCVerificationProps> = ({
                     <input
                       {...register('address.city', { required: 'City is required' })}
                       type="text"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                     />
                     {errors.address?.city && (
                       <p className="mt-1 text-sm text-red-600">{errors.address.city.message}</p>
@@ -307,7 +307,7 @@ export const KYCVerification: React.FC<KYCVerificationProps> = ({
                     <input
                       {...register('address.state', { required: 'State is required' })}
                       type="text"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                     />
                     {errors.address?.state && (
                       <p className="mt-1 text-sm text-red-600">{errors.address.state.message}</p>
@@ -323,7 +323,7 @@ export const KYCVerification: React.FC<KYCVerificationProps> = ({
                     <input
                       {...register('address.postalCode', { required: 'Postal code is required' })}
                       type="text"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                     />
                     {errors.address?.postalCode && (
                       <p className="mt-1 text-sm text-red-600">{errors.address.postalCode.message}</p>
@@ -336,7 +336,7 @@ export const KYCVerification: React.FC<KYCVerificationProps> = ({
                     </label>
                     <select
                       {...register('address.country', { required: 'Country is required' })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                     >
                       <option value="">Select Country</option>
                       <option value="US">United States</option>
@@ -365,7 +365,7 @@ export const KYCVerification: React.FC<KYCVerificationProps> = ({
               <button
                 type="button"
                 onClick={() => setStep(3)}
-                className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+                className="bg-primary text-primary-foreground px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors"
               >
                 Next Step
               </button>
@@ -389,7 +389,7 @@ export const KYCVerification: React.FC<KYCVerificationProps> = ({
                 {...getRootProps()}
                 className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
                   isDragActive 
-                    ? 'border-indigo-500 bg-indigo-50' 
+                    ? 'border-primary bg-primary/10' 
                     : 'border-gray-300 hover:border-gray-400'
                 }`}
               >
@@ -459,7 +459,7 @@ export const KYCVerification: React.FC<KYCVerificationProps> = ({
               <button
                 type="submit"
                 disabled={isSubmitting || documents.length === 0}
-                className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                className="bg-primary text-primary-foreground px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
               >
                 {isSubmitting ? (
                   <>

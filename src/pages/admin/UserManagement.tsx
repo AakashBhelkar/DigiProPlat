@@ -181,13 +181,13 @@ export const UserManagement: React.FC = () => {
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: 700 }}>User</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Subscription</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Products</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Revenue</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Joined</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 700 }}>
+                  <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>User</TableCell>
+                  <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>Status</TableCell>
+                  <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>Subscription</TableCell>
+                  <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>Products</TableCell>
+                  <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>Revenue</TableCell>
+                  <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>Joined</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 700, color: 'primary.main' }}>
                     Actions
                   </TableCell>
                 </TableRow>

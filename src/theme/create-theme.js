@@ -8,8 +8,8 @@ import { updateCoreWithSettings, updateComponentsWithSettings } from './with-set
 // ----------------------------------------------------------------------
 
 export function createTheme(settings) {
-  // Force light mode - remove dark mode completely
-  const forcedSettings = {
+  // Force light mode with custom colors
+  const themeSettings = {
     ...settings,
     colorScheme: 'light', // Always use light mode
   };
@@ -18,12 +18,12 @@ export function createTheme(settings) {
     colorSchemes,
     shadows: shadows('light'), // Always use light shadows
     customShadows: customShadows('light'), // Always use light shadows
-    direction: forcedSettings.direction,
+    direction: themeSettings.direction,
     shape: { borderRadius: 8 },
     components,
     typography: {
       ...typography,
-      fontFamily: setFont(forcedSettings.fontFamily),
+      fontFamily: setFont(themeSettings.fontFamily),
     },
     cssVarPrefix: '',
     shouldSkipGeneratingVar,
@@ -32,12 +32,12 @@ export function createTheme(settings) {
   /**
    * 1.Update values from settings before creating theme.
    */
-  const updateTheme = updateCoreWithSettings(initialTheme, forcedSettings);
+  const updateTheme = updateCoreWithSettings(initialTheme, themeSettings);
 
   /**
    * 2.Create theme + add locale + update component with settings.
    */
-  const theme = extendTheme(updateTheme, updateComponentsWithSettings(forcedSettings), overridesTheme);
+  const theme = extendTheme(updateTheme, updateComponentsWithSettings(themeSettings), overridesTheme);
 
   return theme;
 }

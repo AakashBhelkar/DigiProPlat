@@ -36,3 +36,8 @@ Thumbs.db
 *.tmp
 *.temp
 .cache
+
+# Unused template directories (can be removed)
+starter-vite-js/
+vite-js/
+jules-scratch/

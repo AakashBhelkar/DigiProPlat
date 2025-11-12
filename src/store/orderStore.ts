@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { supabase, supabaseAdmin, handleSupabaseError } from '../lib/supabase';
+import { useAuthStore } from './authStore';
 import toast from 'react-hot-toast';
 
 interface Order {
@@ -47,60 +48,94 @@ export const useOrderStore = create<OrderState>((set, get) => ({
   fetchOrders: async () => {
     set({ isLoading: true });
     try {
-      // Fetch transactions first
-      const { data: transactions, error: transactionsError } = await supabase
-        .from('transactions')
-        .select(`
-          *,
-          products (title)
-        `)
-        .eq('type', 'sale')
-        .order('created_at', { ascending: false });
-
-      if (transactionsError) {
-        handleSupabaseError(transactionsError);
-        return;
-      }
-
-      if (!transactions || transactions.length === 0) {
+      const { user } = useAuthStore.getState();
+      if (!user) {
         set({ orders: [] });
         return;
       }
 
-      // Fetch user emails from auth.users (profiles table doesn't have email)
-      const userIds = [...new Set(transactions.map(t => t.user_id).filter(Boolean))];
-      const userEmails: Record<string, string> = {};
-      
-      try {
-        const { data: authUsers } = await supabaseAdmin.auth.admin.listUsers();
-        if (authUsers?.users) {
-          authUsers.users.forEach(user => {
-            if (userIds.includes(user.id)) {
-              userEmails[user.id] = user.email || 'Unknown';
-            }
-          });
-        }
-      } catch (authErr) {
-        console.warn('Could not fetch user emails:', authErr);
+      // Fetch orders from orders table with product details through order_items
+      const { data: ordersData, error: ordersError } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          order_items (
+            product_id,
+            quantity,
+            unit_price,
+            total_price,
+            products (
+              id,
+              title,
+              description,
+              price
+            )
+          )
+        `)
+        .eq('customer_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (ordersError) {
+        handleSupabaseError(ordersError);
+        set({ orders: [] });
+        return;
       }
 
-      const orders: Order[] = transactions.map(transaction => ({
-        id: transaction.id,
-        productId: transaction.product_id,
-        productTitle: transaction.products?.title || 'Unknown Product',
-        customerId: transaction.user_id,
-        customerEmail: transaction.user_id ? (userEmails[transaction.user_id] || 'Unknown Customer') : 'Unknown Customer',
-        amount: transaction.amount,
-        status: transaction.status,
-        paymentMethod: transaction.payment_method || 'Unknown',
-        paymentIntentId: transaction.stripe_payment_id,
-        downloadLinks: [], // Would be generated dynamically
-        downloadCount: 0, // Would track actual downloads
-        maxDownloads: 5, // Configurable per product
-        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
-        createdAt: transaction.created_at,
-        updatedAt: transaction.created_at
-      }));
+      if (!ordersData || ordersData.length === 0) {
+        set({ orders: [] });
+        return;
+      }
+
+      // Get download token info for each order
+      const orderIds = ordersData.map(o => o.id);
+      const { data: downloadTokens } = await supabase
+        .from('download_tokens')
+        .select('order_id, download_count, max_downloads, expires_at')
+        .in('order_id', orderIds);
+
+      // Group download tokens by order_id
+      const tokensByOrder = new Map<string, { downloadCount: number; maxDownloads: number; expiresAt: string }>();
+      if (downloadTokens) {
+        downloadTokens.forEach(token => {
+          const existing = tokensByOrder.get(token.order_id) || { downloadCount: 0, maxDownloads: 5, expiresAt: '' };
+          tokensByOrder.set(token.order_id, {
+            downloadCount: Math.max(existing.downloadCount, token.download_count || 0),
+            maxDownloads: token.max_downloads || 5,
+            expiresAt: token.expires_at || '',
+          });
+        });
+      }
+
+      // Get user email
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      const userEmail = authUser?.email || 'Unknown';
+
+      const orders: Order[] = ordersData.map(order => {
+        const tokenInfo = tokensByOrder.get(order.id) || { downloadCount: 0, maxDownloads: 5, expiresAt: '' };
+        
+        // Get product from first order item (assuming one product per order for now)
+        const orderItems = order.order_items as any[] || [];
+        const firstOrderItem = orderItems[0];
+        const product = firstOrderItem?.products as any;
+
+        return {
+          id: order.id,
+          productId: firstOrderItem?.product_id || '',
+          productTitle: product?.title || 'Unknown Product',
+          customerId: order.customer_id,
+          customerEmail: order.customer_email || userEmail,
+          amount: Number(order.total_amount || 0),
+          status: order.status || 'pending',
+          paymentMethod: order.payment_method || 'stripe',
+          paymentIntentId: order.payment_intent_id || undefined,
+          downloadLinks: [], // Will be generated when needed
+          downloadCount: tokenInfo.downloadCount,
+          maxDownloads: tokenInfo.maxDownloads,
+          expiresAt: tokenInfo.expiresAt || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          createdAt: order.created_at,
+          updatedAt: order.updated_at || order.created_at
+        };
+      });
 
       set({ orders });
     } catch (error: any) {
@@ -186,18 +221,34 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 
   generateDownloadLinks: async (orderId) => {
     try {
-      // In a real implementation, this would:
-      // 1. Get product files from database
-      // 2. Generate secure, time-limited download URLs
-      // 3. Store download links with expiration
-      // 4. Return the links
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://mafryhnhgopxfckrepxv.supabase.co';
+      
+      // Get auth token for authenticated request
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('User must be authenticated to generate download links');
+      }
 
-      const downloadLinks = [
-        `https://secure-downloads.digiproplat.com/${orderId}/file1.zip?token=abc123`,
-        `https://secure-downloads.digiproplat.com/${orderId}/file2.pdf?token=def456`
-      ];
+      const response = await fetch(`${supabaseUrl}/functions/v1/generate-download-links`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          orderId,
+          expiresInDays: 7,
+          maxDownloads: 5,
+        }),
+      });
 
-      return downloadLinks;
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Failed to generate download links' }));
+        throw new Error(errorData.error || 'Failed to generate download links');
+      }
+
+      const data = await response.json();
+      return data.downloadLinks.map((link: any) => link.downloadUrl);
     } catch (error: any) {
       toast.error(error.message || 'Failed to generate download links');
       throw error;
@@ -206,13 +257,44 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 
   trackDownload: async (orderId, fileId) => {
     try {
-      // In a real implementation, this would:
-      // 1. Increment download count
-      // 2. Log download activity
-      // 3. Check download limits
-      // 4. Update analytics
+      // Get download token for this order and file
+      const { data: downloadToken } = await supabase
+        .from('download_tokens')
+        .select('token')
+        .eq('order_id', orderId)
+        .eq('file_id', fileId)
+        .single();
 
-      console.log(`Download tracked for order ${orderId}, file ${fileId}`);
+      if (!downloadToken) {
+        console.warn('Download token not found for tracking');
+        return;
+      }
+
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://mafryhnhgopxfckrepxv.supabase.co';
+      
+      // Get auth token for authenticated request
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.warn('User not authenticated, cannot track download');
+        return;
+      }
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/track-download`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          token: downloadToken.token,
+          fileId,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Failed to track download' }));
+        console.error('Failed to track download:', errorData.error);
+      }
     } catch (error: any) {
       console.error('Failed to track download:', error);
     }

@@ -56,9 +56,10 @@ const MuiTableCell = {
     root: { borderBottomStyle: 'dashed' },
     head: ({ theme }) => ({
       fontSize: 14,
-      color: theme.vars.palette.text.secondary,
-      fontWeight: theme.typography.fontWeightSemiBold,
-      backgroundColor: theme.vars.palette.background.neutral,
+      color: theme.vars.palette.primary.main,
+      fontWeight: theme.typography.fontWeightBold,
+      backgroundColor: varAlpha(theme.vars.palette.primary.mainChannel, 0.08),
+      borderBottom: `2px solid ${varAlpha(theme.vars.palette.primary.mainChannel, 0.2)}`,
     }),
     stickyHeader: ({ theme }) => ({
       backgroundColor: theme.vars.palette.background.paper,

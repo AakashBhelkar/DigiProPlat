@@ -3,6 +3,10 @@ import { X, CreditCard, Lock, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
+import { createCheckoutSession, redirectToCheckout } from '../../lib/stripe';
+import { supabase } from '../../lib/supabase';
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://mafryhnhgopxfckrepxv.supabase.co';
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -12,6 +16,7 @@ interface CheckoutModalProps {
     title: string;
     price: number;
     thumbnail?: string;
+    sellerId?: string; // Add sellerId to product interface
   };
   onSuccess: (orderId: string) => void;
 }
@@ -39,29 +44,112 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'paypal'>('card');
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; type: 'percentage' | 'fixed'; value: number } | null>(null);
+  const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
+  const [couponError, setCouponError] = useState('');
   
   const { register, handleSubmit, formState: { errors } } = useForm<PaymentFormData>();
 
-  const onSubmit = async (_data: PaymentFormData) => {
+  // Calculate final price with coupon
+  const calculateFinalPrice = () => {
+    let finalPrice = product.price;
+    if (appliedCoupon) {
+      if (appliedCoupon.type === 'percentage') {
+        finalPrice = product.price * (1 - appliedCoupon.value / 100);
+      } else {
+        finalPrice = Math.max(0, product.price - appliedCoupon.value);
+      }
+    }
+    return finalPrice;
+  };
+
+  const finalPrice = calculateFinalPrice();
+  const discountAmount = product.price - finalPrice;
+
+  // Validate coupon
+  const handleValidateCoupon = async () => {
+    if (!couponCode.trim()) {
+      setCouponError('Please enter a coupon code');
+      return;
+    }
+
+    setIsValidatingCoupon(true);
+    setCouponError('');
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/validate-coupon`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token || ''}`,
+        },
+        body: JSON.stringify({
+          code: couponCode.toUpperCase(),
+          productId: product.id,
+          userId,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.valid && data.coupon) {
+        setAppliedCoupon(data.coupon);
+        setCouponError('');
+        toast.success('Coupon applied successfully!');
+      } else {
+        setAppliedCoupon(null);
+        setCouponError(data.error || 'Invalid coupon code');
+        toast.error(data.error || 'Invalid coupon code');
+      }
+    } catch (error: any) {
+      setCouponError('Failed to validate coupon');
+      toast.error('Failed to validate coupon');
+    } finally {
+      setIsValidatingCoupon(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode('');
+    setCouponError('');
+  };
+
+  const onSubmit = async (data: PaymentFormData) => {
+    if (!product.sellerId) {
+      toast.error('Product seller information is missing. Please try again.');
+      return;
+    }
+
     setIsProcessing(true);
     try {
-      // Simulate payment processing
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      // Create Stripe Checkout Session with coupon
+      const session = await createCheckoutSession(
+        product.id,
+        finalPrice, // Use discounted price
+        product.title,
+        product.sellerId,
+        product.thumbnail,
+        undefined, // buyerId will be fetched in the function
+        appliedCoupon?.code // Pass coupon code
+      );
+
+      if (!session.sessionId) {
+        throw new Error('Failed to create checkout session');
+      }
+
+      // Redirect to Stripe Checkout
+      await redirectToCheckout(session.sessionId);
       
-      // In a real implementation, you would:
-      // 1. Create payment intent with Stripe
-      // 2. Process the payment
-      // 3. Create order record
-      // 4. Send confirmation email
-      // 5. Provide download links
-      
-      const orderId = `order_${Date.now()}`;
-      toast.success('Payment successful! Check your email for download links.');
-      onSuccess(orderId);
-      onClose();
-    } catch (_error) {
-      toast.error('Payment failed. Please try again.');
-    } finally {
+      // Note: onSuccess will be called after redirect when user returns from Stripe
+      // The webhook will handle order creation
+    } catch (error: any) {
+      console.error('Payment error:', error);
+      toast.error(error.message || 'Payment failed. Please try again.');
       setIsProcessing(false);
     }
   };
@@ -106,16 +194,78 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
               {/* Product Summary */}
               <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                <div className="flex items-center space-x-4">
-                  <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+                <div className="flex items-center space-x-4 mb-4">
+                  <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary/80 rounded-lg flex items-center justify-center">
                     <span className="text-white font-bold text-lg">
                       {product.title.charAt(0)}
                     </span>
                   </div>
                   <div className="flex-1">
                     <h4 className="font-semibold text-gray-900">{product.title}</h4>
-                    <p className="text-2xl font-bold text-indigo-600">${product.price}</p>
+                    <div className="flex items-center space-x-2">
+                      {appliedCoupon && (
+                        <span className="text-lg text-gray-500 line-through">${product.price.toFixed(2)}</span>
+                      )}
+                      <p className="text-2xl font-bold text-primary">${finalPrice.toFixed(2)}</p>
+                    </div>
+                    {appliedCoupon && discountAmount > 0 && (
+                      <p className="text-sm text-green-600 font-medium">
+                        You saved ${discountAmount.toFixed(2)}!
+                      </p>
+                    )}
                   </div>
+                </div>
+
+                {/* Coupon Code Input */}
+                <div className="border-t pt-4">
+                  {!appliedCoupon ? (
+                    <div className="flex space-x-2">
+                      <input
+                        type="text"
+                        value={couponCode}
+                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                        placeholder="Enter coupon code"
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                        disabled={isValidatingCoupon || isProcessing}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleValidateCoupon();
+                          }
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleValidateCoupon}
+                        disabled={isValidatingCoupon || isProcessing || !couponCode.trim()}
+                        className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isValidatingCoupon ? 'Validating...' : 'Apply'}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg p-3">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-green-600 font-medium">✓ {appliedCoupon.code}</span>
+                        <span className="text-sm text-gray-600">
+                          {appliedCoupon.type === 'percentage' 
+                            ? `${appliedCoupon.value}% off` 
+                            : `$${appliedCoupon.value} off`}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleRemoveCoupon}
+                        className="text-sm text-red-600 hover:text-red-700"
+                        disabled={isProcessing}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  )}
+                  {couponError && (
+                    <p className="mt-2 text-sm text-red-600">{couponError}</p>
+                  )}
                 </div>
               </div>
 
@@ -128,7 +278,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     onClick={() => setPaymentMethod('card')}
                     className={`p-4 border-2 rounded-lg transition-colors ${
                       paymentMethod === 'card'
-                        ? 'border-indigo-500 bg-indigo-50'
+                        ? 'border-primary bg-primary/10'
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
@@ -140,7 +290,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     onClick={() => setPaymentMethod('paypal')}
                     className={`p-4 border-2 rounded-lg transition-colors ${
                       paymentMethod === 'paypal'
-                        ? 'border-indigo-500 bg-indigo-50'
+                        ? 'border-primary bg-primary/10'
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
@@ -168,7 +318,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         }
                       })}
                       type="email"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                       placeholder="your@email.com"
                       disabled={isProcessing}
                     />
@@ -188,7 +338,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                       <input
                         {...register('cardholderName', { required: 'Cardholder name is required' })}
                         type="text"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                         placeholder="John Doe"
                         disabled={isProcessing}
                       />
@@ -210,7 +360,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                           }
                         })}
                         type="text"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                         placeholder="1234 5678 9012 3456"
                         maxLength={19}
                         onChange={(e) => {
@@ -237,7 +387,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                             }
                           })}
                           type="text"
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                           placeholder="MM/YY"
                           maxLength={5}
                           onChange={(e) => {
@@ -262,7 +412,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                             }
                           })}
                           type="text"
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                           placeholder="123"
                           maxLength={4}
                           disabled={isProcessing}
@@ -285,7 +435,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                       <input
                         {...register('billingAddress.line1', { required: 'Address is required' })}
                         type="text"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                         placeholder="123 Main Street"
                         disabled={isProcessing}
                       />
@@ -302,7 +452,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         <input
                           {...register('billingAddress.city', { required: 'City is required' })}
                           type="text"
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                           placeholder="New York"
                           disabled={isProcessing}
                         />
@@ -317,7 +467,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         <input
                           {...register('billingAddress.state', { required: 'State is required' })}
                           type="text"
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                           placeholder="NY"
                           disabled={isProcessing}
                         />
@@ -335,7 +485,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         <input
                           {...register('billingAddress.postalCode', { required: 'Postal code is required' })}
                           type="text"
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                           placeholder="10001"
                           disabled={isProcessing}
                         />
@@ -349,7 +499,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         </label>
                         <select
                           {...register('billingAddress.country', { required: 'Country is required' })}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                           disabled={isProcessing}
                         >
                           <option value="">Select Country</option>
@@ -381,7 +531,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   <button
                     type="submit"
                     disabled={isProcessing}
-                    className="w-full bg-indigo-600 text-white py-4 px-6 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 text-lg font-semibold"
+                    className="w-full bg-primary text-primary-foreground py-4 px-6 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 text-lg font-semibold"
                   >
                     {isProcessing ? (
                       <>

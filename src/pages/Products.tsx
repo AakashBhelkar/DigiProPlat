@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Card,
@@ -28,16 +28,27 @@ import { useProductStore } from '../store/productStore';
 import { formatDistanceToNow } from 'date-fns';
 import { DashboardContent } from '../layouts/dashboard/main';
 import { RouterLink } from '../routes/components';
+import { ProductEditModal } from '../components/Products/ProductEditModal';
+import { DeleteProductDialog } from '../components/Products/DeleteProductDialog';
+import { Product } from '../types';
+import { supabase, getFileUrl } from '../lib/supabase';
+import toast from 'react-hot-toast';
 
 // ----------------------------------------------------------------------
 
 export const Products: React.FC = () => {
   const theme = useTheme();
-  const { products, deleteProduct } = useProductStore();
+  const navigate = useNavigate();
+  const { products, deleteProduct, setSelectedProduct } = useProductStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const categories = ['all', 'templates', 'ebooks', 'graphics', 'software', 'audio', 'video'];
 
@@ -59,9 +70,95 @@ export const Products: React.FC = () => {
     setSelectedProductId(null);
   };
 
-  const handleDeleteProduct = (productId: string) => {
-    if (window.confirm('Are you sure you want to delete this product?')) {
-      deleteProduct(productId);
+  const handleEditProduct = (productId: string) => {
+    const product = products.find(p => p.id === productId);
+    if (product) {
+      setSelectedProduct(product);
+      setEditModalOpen(true);
+      handleMenuClose();
+    }
+  };
+
+  const handleDeleteClick = (productId: string) => {
+    const product = products.find(p => p.id === productId);
+    if (product) {
+      setProductToDelete(product);
+      setDeleteDialogOpen(true);
+      handleMenuClose();
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!productToDelete) return;
+    
+    setIsDeleting(true);
+    try {
+      await deleteProduct(productToDelete.id);
+      setDeleteDialogOpen(false);
+      setProductToDelete(null);
+      toast.success('Product deleted successfully!');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete product');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleViewDetails = (productId: string) => {
+    handleMenuClose();
+    navigate(`/marketplace/product/${productId}`);
+  };
+
+  const handleDownloadFiles = async (productId: string) => {
+    const product = products.find(p => p.id === productId);
+    if (!product || !product.files || product.files.length === 0) {
+      toast.error('No files available for this product');
+      handleMenuClose();
+      return;
+    }
+
+    setIsDownloading(true);
+    try {
+      // Download each file
+      for (const file of product.files) {
+        try {
+          // Get signed URL from Supabase Storage
+          const { data, error } = await supabase.storage
+            .from('product-files')
+            .createSignedUrl(file.url, 3600); // 1 hour expiry
+
+          if (error) {
+            console.error('Error creating signed URL:', error);
+            // Try public URL as fallback
+            const publicUrl = getFileUrl('product-files', file.url);
+            const link = document.createElement('a');
+            link.href = publicUrl;
+            link.download = file.name;
+            link.target = '_blank';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          } else if (data?.signedUrl) {
+            // Download using signed URL
+            const link = document.createElement('a');
+            link.href = data.signedUrl;
+            link.download = file.name;
+            link.target = '_blank';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          }
+        } catch (fileError: any) {
+          console.error(`Error downloading file ${file.name}:`, fileError);
+          toast.error(`Failed to download ${file.name}`);
+        }
+      }
+      
+      toast.success('Files downloaded successfully!');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to download files');
+    } finally {
+      setIsDownloading(false);
       handleMenuClose();
     }
   };
@@ -278,22 +375,25 @@ export const Products: React.FC = () => {
             horizontal: 'right',
           }}
         >
-          <MenuItem component={RouterLink} href="#" onClick={handleMenuClose}>
+          <MenuItem onClick={() => selectedProductId && handleViewDetails(selectedProductId)}>
             <Iconify icon="solar:eye-bold-duotone" sx={{ mr: 1 }} />
             View Details
           </MenuItem>
-          <MenuItem component={RouterLink} href="#" onClick={handleMenuClose}>
+          <MenuItem onClick={() => selectedProductId && handleEditProduct(selectedProductId)}>
             <Iconify icon="solar:pen-bold-duotone" sx={{ mr: 1 }} />
             Edit Product
           </MenuItem>
-          <MenuItem component={RouterLink} href="#" onClick={handleMenuClose}>
+          <MenuItem 
+            onClick={() => selectedProductId && handleDownloadFiles(selectedProductId)}
+            disabled={isDownloading}
+          >
             <Iconify icon="solar:download-bold-duotone" sx={{ mr: 1 }} />
-            Download Files
+            {isDownloading ? 'Downloading...' : 'Download Files'}
           </MenuItem>
           <Divider />
           {selectedProductId && (
             <MenuItem
-              onClick={() => handleDeleteProduct(selectedProductId)}
+              onClick={() => handleDeleteClick(selectedProductId)}
               sx={{ color: 'error.main' }}
             >
               <Iconify icon="solar:trash-bin-trash-bold-duotone" sx={{ mr: 1 }} />
@@ -301,6 +401,30 @@ export const Products: React.FC = () => {
             </MenuItem>
           )}
         </Menu>
+
+        {/* Edit Modal */}
+        {editModalOpen && (
+          <ProductEditModal
+            open={editModalOpen}
+            onClose={() => {
+              setEditModalOpen(false);
+              setSelectedProduct(null);
+            }}
+            product={products.find(p => p.id === selectedProductId) || null}
+          />
+        )}
+
+        {/* Delete Dialog */}
+        <DeleteProductDialog
+          open={deleteDialogOpen}
+          onClose={() => {
+            setDeleteDialogOpen(false);
+            setProductToDelete(null);
+          }}
+          onConfirm={handleDeleteConfirm}
+          productTitle={productToDelete?.title}
+          isDeleting={isDeleting}
+        />
       </Stack>
     </DashboardContent>
   );

@@ -69,6 +69,9 @@ export function HeaderSection({
       className={layoutClasses.header}
       sx={{
         zIndex: 'var(--layout-header-zIndex)',
+        backgroundColor: 'rgba(240, 253, 250, 0.95)', // Light teal background with transparency
+        backdropFilter: 'blur(20px)',
+        borderBottom: `1px solid rgba(19, 78, 74, 0.1)`, // Subtle border
         ...sx,
       }}
       {...other}

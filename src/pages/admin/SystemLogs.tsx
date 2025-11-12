@@ -97,7 +97,7 @@ export const SystemLogs: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">System Logs</h1>
+          <h1 className="text-2xl font-bold text-primary">System Logs</h1>
           <p className="text-gray-600">Monitor admin activities and system events</p>
         </div>
         <div className="flex items-center space-x-3">
@@ -119,7 +119,7 @@ export const SystemLogs: React.FC = () => {
                 placeholder="Search logs..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
               />
             </div>
           </div>
@@ -127,7 +127,7 @@ export const SystemLogs: React.FC = () => {
             <select
               value={actionFilter}
               onChange={(e) => setActionFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
             >
               <option value="all">All Actions</option>
               <option value="login">Login</option>
@@ -139,7 +139,7 @@ export const SystemLogs: React.FC = () => {
             <select
               value={dateRange}
               onChange={(e) => setDateRange(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
             >
               <option value="today">Today</option>
               <option value="week">This Week</option>
@@ -153,7 +153,7 @@ export const SystemLogs: React.FC = () => {
       {/* Logs List */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Activity Log</h3>
+          <h3 className="text-lg font-semibold text-primary">Activity Log</h3>
         </div>
         <div className="divide-y divide-gray-200">
           {filteredLogs.map((log, index) => {
@@ -210,7 +210,7 @@ export const SystemLogs: React.FC = () => {
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Activity className="h-8 w-8 text-gray-400" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No logs found</h3>
+          <h3 className="text-lg font-medium text-primary mb-2">No logs found</h3>
           <p className="text-gray-600">
             Try adjusting your search terms or filters.
           </p>

@@ -641,7 +641,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({ section, onUpdate 
                         type="text"
                         value={section.content.title || ''}
                         onChange={e => updateContent('title', e.target.value)}
-                        className="w-full px-3 py-2 border border-input rounded-md focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:border-purple-500"
+                        className="w-full px-3 py-2 border border-input rounded-md focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary"
                       />
                     </div>
                     <div className="bg-background/90 rounded-lg shadow p-3 border border-border">
@@ -665,7 +665,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({ section, onUpdate 
                         value={section.content.videoUrl || ''}
                         onChange={e => updateContent('videoUrl', e.target.value)}
                         placeholder="https://youtube.com/watch?v=..."
-                        className="w-full px-3 py-2 border border-input rounded-md focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:border-purple-500"
+                        className="w-full px-3 py-2 border border-input rounded-md focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary"
                       />
                       <MediaPicker
                         label="Video Thumbnail (optional)"
@@ -854,7 +854,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({ section, onUpdate 
                         type="text"
                         value={(section.content as NewsletterContent).title || ''}
                         onChange={e => updateContent('title', e.target.value)}
-                        className="w-full px-3 py-2 border border-input rounded-md focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:border-indigo-500"
+                        className="w-full px-3 py-2 border border-input rounded-md focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary"
                       />
                     </div>
                     <div className="bg-background/90 rounded-lg shadow p-3 border border-border">
@@ -866,7 +866,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({ section, onUpdate 
                         value={(section.content as NewsletterContent).description || ''}
                         onChange={e => updateContent('description', e.target.value)}
                         rows={3}
-                        className="w-full px-3 py-2 border border-input rounded-md focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:border-indigo-500"
+                        className="w-full px-3 py-2 border border-input rounded-md focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary"
                       />
                     </div>
                     <div className="bg-background/90 rounded-lg shadow p-3 border border-border">
@@ -877,7 +877,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({ section, onUpdate 
                         type="text"
                         value={(section.content as NewsletterContent).placeholder || ''}
                         onChange={e => updateContent('placeholder', e.target.value)}
-                className="w-full px-3 py-2 border border-input rounded-md focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:border-indigo-500"
+                className="w-full px-3 py-2 border border-input rounded-md focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary"
                       />
                     </div>
                     <div className="bg-background/90 rounded-lg shadow p-3 border border-border mt-4">
@@ -1013,7 +1013,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({ section, onUpdate 
                         style={{ outlineColor: `var(--tw-${meta.color}-500, #6366f1)` }}
                       />
                       <Button
-                        className="ml-2 text-xs text-muted-foreground underline hover:text-indigo-600"
+                        className="ml-2 text-xs text-muted-foreground underline hover:text-primary"
                         title="Reset to global background color"
                         onClick={() => updateStyles('backgroundColor', undefined)}
                       >Reset</Button>
@@ -1029,7 +1029,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({ section, onUpdate 
                         style={{ outlineColor: `var(--tw-${meta.color}-500, #6366f1)` }}
                       />
                       <Button
-                        className="ml-2 text-xs text-muted-foreground underline hover:text-indigo-600"
+                        className="ml-2 text-xs text-muted-foreground underline hover:text-primary"
                         title="Reset to global text color"
                         onClick={() => updateStyles('textColor', undefined)}
                       >Reset</Button>
@@ -1047,7 +1047,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({ section, onUpdate 
                         className={`w-full accent-${meta.color}-500`}
                       />
                       <Button
-                        className="ml-2 text-xs text-muted-foreground underline hover:text-indigo-600"
+                        className="ml-2 text-xs text-muted-foreground underline hover:text-primary"
                         title="Reset to global section spacing"
                         onClick={() => updateStyles('padding', undefined)}
                       >Reset</Button>
@@ -1082,7 +1082,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({ section, onUpdate 
                       id="animationType"
                       value={section.styles.animationType || ''}
                       onChange={e => updateStyles('animationType', e.target.value)}
-                      className="w-full px-3 py-2 border border-input rounded-md focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:border-indigo-500"
+                      className="w-full px-3 py-2 border border-input rounded-md focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary"
                       aria-describedby="animationType-desc"
                     >
                       <option value="">None</option>
@@ -1104,7 +1104,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({ section, onUpdate 
                           step={100}
                           value={section.styles.animationDelay || 0}
                           onChange={e => updateStyles('animationDelay', Number(e.target.value))}
-                          className="w-24 px-2 py-1 border border-input rounded-md focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:border-indigo-500"
+                          className="w-24 px-2 py-1 border border-input rounded-md focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary"
                           aria-describedby="animationDelay-desc"
                         />
                         <div id="animationDelay-desc" className="text-xs text-muted-foreground">Delay before animation starts.</div>
@@ -1119,7 +1119,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({ section, onUpdate 
                           step={100}
                           value={section.styles.animationDuration || 600}
                           onChange={e => updateStyles('animationDuration', Number(e.target.value))}
-                          className="w-24 px-2 py-1 border border-input rounded-md focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:border-indigo-500"
+                          className="w-24 px-2 py-1 border border-input rounded-md focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary"
                           aria-describedby="animationDuration-desc"
                         />
                         <div id="animationDuration-desc" className="text-xs text-muted-foreground">How long the animation lasts.</div>
@@ -1183,7 +1183,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({ section, onUpdate 
                       <select
                         value={section.styles.boxShadow || 'md'}
                         onChange={e => updateStyles('boxShadow', e.target.value)}
-                        className="w-full px-3 py-2 border border-input rounded-md focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:border-indigo-500"
+                        className="w-full px-3 py-2 border border-input rounded-md focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary"
                       >
                         <option value="none">None</option>
                         <option value="sm">Small</option>
@@ -1203,7 +1203,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({ section, onUpdate 
                       type="text"
                       value={section.styles.className || ''}
                       onChange={e => updateStyles('className', e.target.value)}
-                      className="w-full px-3 py-2 border border-input rounded-md focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:border-indigo-500 font-mono"
+                      className="w-full px-3 py-2 border border-input rounded-md focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary font-mono"
                       placeholder="e.g. my-custom-section"
                       aria-describedby="className-desc"
                     />
@@ -1215,7 +1215,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({ section, onUpdate 
                       as="textarea"
                       value={section.styles.customCSS || ''}
                       onChange={e => updateStyles('customCSS', e.target.value)}
-                      className="w-full px-3 py-2 border border-input rounded-md focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:border-indigo-500 font-mono text-xs"
+                      className="w-full px-3 py-2 border border-input rounded-md focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary font-mono text-xs"
                       rows={3}
                       placeholder="e.g. background: linear-gradient(...);"
                       aria-describedby="customCSS-desc"

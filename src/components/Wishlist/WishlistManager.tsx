@@ -144,7 +144,7 @@ export const WishlistManager: React.FC<WishlistManagerProps> = ({
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
           >
             <option value="all">All Categories</option>
             {categories.map(category => (
@@ -157,7 +157,7 @@ export const WishlistManager: React.FC<WishlistManagerProps> = ({
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
           >
             <option value="newest">Newest First</option>
             <option value="oldest">Oldest First</option>
@@ -176,7 +176,7 @@ export const WishlistManager: React.FC<WishlistManagerProps> = ({
                 }
               });
             }}
-            className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+            className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"
           >
             Add All to Cart
           </button>
@@ -216,7 +216,7 @@ export const WishlistManager: React.FC<WishlistManagerProps> = ({
               } ${viewMode === 'list' ? 'flex' : ''}`}
             >
               {/* Product Image */}
-              <div className={`${viewMode === 'list' ? 'w-48 flex-shrink-0' : 'aspect-video'} bg-gradient-to-br from-indigo-500 to-purple-600 relative`}>
+              <div className={`${viewMode === 'list' ? 'w-48 flex-shrink-0' : 'aspect-video'} bg-gradient-to-br from-primary to-primary/80 relative`}>
                 <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
                   <span className="text-white text-lg font-semibold">
                     {item.productTitle.charAt(0).toUpperCase()}
@@ -251,7 +251,7 @@ export const WishlistManager: React.FC<WishlistManagerProps> = ({
                 <div className={`${viewMode === 'list' ? 'flex items-start justify-between h-full' : ''}`}>
                   <div className={`${viewMode === 'list' ? 'flex-1 pr-4' : ''}`}>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/20 text-primary">
                         {item.productCategory}
                       </span>
                       <div className="flex items-center space-x-1">
@@ -300,7 +300,7 @@ export const WishlistManager: React.FC<WishlistManagerProps> = ({
                     {item.isAvailable && (
                       <button
                         onClick={() => onAddToCart(item.productId)}
-                        className="flex-1 bg-indigo-600 text-white px-3 py-2 rounded-lg hover:bg-indigo-700 transition-colors text-sm flex items-center justify-center space-x-1"
+                        className="flex-1 bg-primary text-primary-foreground px-3 py-2 rounded-lg hover:bg-primary/90 transition-colors text-sm flex items-center justify-center space-x-1"
                       >
                         <ShoppingCart className="h-4 w-4" />
                         <span>Add to Cart</span>

@@ -55,7 +55,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
       case 'sale': return 'text-green-600 bg-green-100';
       case 'payment': return 'text-blue-600 bg-blue-100';
       case 'system': return 'text-gray-600 bg-gray-100';
-      case 'marketing': return 'text-purple-600 bg-purple-100';
+      case 'marketing': return 'text-primary bg-primary/20';
       case 'security': return 'text-red-600 bg-red-100';
       default: return 'text-gray-600 bg-gray-100';
     }
@@ -82,7 +82,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
       {/* Notification Bell */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded-full"
+        className="relative p-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-full"
       >
         <Bell className="h-6 w-6" />
         {unreadCount > 0 && (
@@ -133,7 +133,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                   <select
                     value={filter}
                     onChange={(e) => setFilter(e.target.value as any)}
-                    className="text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-primary focus:border-primary"
                   >
                     <option value="all">All</option>
                     <option value="unread">Unread</option>
@@ -143,7 +143,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                   <select
                     value={typeFilter}
                     onChange={(e) => setTypeFilter(e.target.value)}
-                    className="text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-primary focus:border-primary"
                   >
                     <option value="all">All Types</option>
                     <option value="sale">Sales</option>
@@ -160,7 +160,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                     {unreadCount > 0 && (
                       <button
                         onClick={onMarkAllAsRead}
-                        className="text-sm text-indigo-600 hover:text-indigo-700 flex items-center space-x-1"
+                        className="text-sm text-primary hover:text-primary/80 flex items-center space-x-1"
                       >
                         <Check className="h-3 w-3" />
                         <span>Mark all read</span>
@@ -248,7 +248,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                                   {formatDistanceToNow(new Date(notification.createdAt))} ago
                                 </span>
                                 {notification.actionText && (
-                                  <span className="text-xs text-indigo-600 font-medium">
+                                  <span className="text-xs text-primary font-medium">
                                     {notification.actionText}
                                   </span>
                                 )}
@@ -270,7 +270,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                       setIsOpen(false);
                       // Navigate to full notifications page
                     }}
-                    className="w-full text-center text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                    className="w-full text-center text-sm text-primary hover:text-primary/80 font-medium"
                   >
                     View all notifications
                   </button>

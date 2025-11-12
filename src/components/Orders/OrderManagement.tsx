@@ -29,6 +29,7 @@ import {
 import { Iconify } from '../iconify';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
+import { OrderDetailsModal } from './OrderDetailsModal';
 
 const MotionCard = motion.create(Card);
 
@@ -48,6 +49,7 @@ interface OrderManagementProps {
   orders: Order[];
   onRefund: (orderId: string) => void;
   onResendDownloadLink: (orderId: string) => void;
+  onDownload?: (orderId: string) => void;
   showBlankTable?: boolean;
 }
 
@@ -55,6 +57,7 @@ export const OrderManagement: React.FC<OrderManagementProps> = ({
   orders,
   onRefund,
   onResendDownloadLink,
+  onDownload,
   showBlankTable = false,
 }) => {
   const theme = useTheme();
@@ -62,6 +65,8 @@ export const OrderManagement: React.FC<OrderManagementProps> = ({
   const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'pending' | 'failed' | 'refunded'>('all');
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
@@ -80,6 +85,15 @@ export const OrderManagement: React.FC<OrderManagementProps> = ({
   const handleMenuClose = () => {
     setAnchorEl(null);
     setSelectedOrderId(null);
+  };
+
+  const handleViewDetails = (orderId: string) => {
+    const order = orders.find(o => o.id === orderId);
+    if (order) {
+      setSelectedOrder(order);
+      setDetailsModalOpen(true);
+      handleMenuClose();
+    }
   };
 
   const getTotalRevenue = () => {
@@ -225,13 +239,13 @@ export const OrderManagement: React.FC<OrderManagementProps> = ({
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell sx={{ fontWeight: 700 }}>Order</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Customer</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Amount</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Downloads</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Date</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 700 }}>
+                <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>Order</TableCell>
+                <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>Customer</TableCell>
+                <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>Amount</TableCell>
+                <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>Status</TableCell>
+                <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>Downloads</TableCell>
+                <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>Date</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 700, color: 'primary.main' }}>
                   Actions
                 </TableCell>
               </TableRow>
@@ -310,12 +324,23 @@ export const OrderManagement: React.FC<OrderManagementProps> = ({
                     </TableCell>
                     <TableCell align="right">
                       <Stack direction="row" spacing={1} justifyContent="flex-end">
+                        {order.status === 'completed' && onDownload && (
+                          <IconButton
+                            size="small"
+                            onClick={() => onDownload(order.id)}
+                            color="primary"
+                            title="Download Files"
+                          >
+                            <Iconify icon="solar:download-bold-duotone" />
+                          </IconButton>
+                        )}
                         <IconButton
                           size="small"
                           onClick={() => onResendDownloadLink(order.id)}
-                          color="primary"
+                          color="secondary"
+                          title="Resend Download Link"
                         >
-                          <Iconify icon="solar:download-bold-duotone" />
+                          <Iconify icon="solar:letter-bold-duotone" />
                         </IconButton>
                         <IconButton
                           size="small"
@@ -347,7 +372,7 @@ export const OrderManagement: React.FC<OrderManagementProps> = ({
           horizontal: 'right',
         }}
       >
-        <MenuItem onClick={handleMenuClose}>
+        <MenuItem onClick={() => selectedOrderId && handleViewDetails(selectedOrderId)}>
           <Iconify icon="solar:eye-bold-duotone" sx={{ mr: 1 }} />
           View Details
         </MenuItem>
@@ -368,6 +393,20 @@ export const OrderManagement: React.FC<OrderManagementProps> = ({
           </>
         )}
       </Menu>
+
+      {/* Order Details Modal */}
+      {selectedOrder && (
+        <OrderDetailsModal
+          open={detailsModalOpen}
+          onClose={() => {
+            setDetailsModalOpen(false);
+            setSelectedOrder(null);
+          }}
+          order={selectedOrder}
+          onDownload={onDownload}
+          onResendDownloadLink={onResendDownloadLink}
+        />
+      )}
     </Stack>
   );
 };

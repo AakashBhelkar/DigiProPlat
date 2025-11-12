@@ -30,19 +30,24 @@ export function FontOptions({ value, options, onClickOption }) {
                   borderStyle: 'solid',
                   display: 'inline-flex',
                   flexDirection: 'column',
+                  bgcolor: 'background.paper',
                   borderColor: 'transparent',
                   fontFamily: setFont(option),
                   fontWeight: 'fontWeightMedium',
                   fontSize: (theme) => theme.typography.pxToRem(12),
-                  color: (theme) => theme.vars.palette.text.disabled,
+                  color: (theme) => theme.vars.palette.text.secondary,
+                  '&:hover': {
+                    color: (theme) => theme.vars.palette.text.primary,
+                    borderColor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.24),
+                  },
                   ...(selected && {
                     color: (theme) => theme.vars.palette.text.primary,
-                    borderColor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.08),
+                    borderColor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.24),
                     boxShadow: (theme) =>
-                      `-8px 8px 20px -4px ${varAlpha(theme.vars.palette.grey['500Channel'], 0.12)}`,
+                      `-8px 8px 20px -4px ${varAlpha(theme.vars.palette.grey['500Channel'], 0.16)}`,
                     [stylesMode.dark]: {
                       boxShadow: (theme) =>
-                        `-8px 8px 20px -4px ${varAlpha(theme.vars.palette.common.blackChannel, 0.12)}`,
+                        `-8px 8px 20px -4px ${varAlpha(theme.vars.palette.common.blackChannel, 0.16)}`,
                     },
                   }),
                 }}

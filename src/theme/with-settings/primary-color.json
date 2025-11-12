@@ -8,11 +8,11 @@
     "contrastText": "#FFFFFF"
   },
   "purple": {
-    "lighter": "#EBD6FD",
-    "light": "#B985F4",
-    "main": "#7635dc",
-    "dark": "#431A9E",
-    "darker": "#200A69",
+    "lighter": "#C8B3E8",
+    "light": "#9B7FC7",
+    "main": "#6B4FA8",
+    "dark": "#4D2F7A",
+    "darker": "#2F1D4D",
     "contrastText": "#FFFFFF"
   },
   "blue": {

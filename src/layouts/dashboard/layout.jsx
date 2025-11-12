@@ -84,7 +84,7 @@ export function DashboardLayout({ sx, children, data }) {
               workspaces: false,
               localization: false,
               contacts: false,
-              settings: false,
+              settings: true,
             }}
             slots={{
               topArea: (

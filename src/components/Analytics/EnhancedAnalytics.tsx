@@ -56,8 +56,8 @@ export const EnhancedAnalytics: React.FC<EnhancedAnalyticsProps> = ({
       change: '+8.7%',
       trend: 'up',
       icon: Eye,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-100'
+      color: 'text-primary',
+      bgColor: 'bg-primary/20'
     },
     {
       title: 'Conversion Rate',
@@ -65,8 +65,8 @@ export const EnhancedAnalytics: React.FC<EnhancedAnalyticsProps> = ({
       change: '+2.3%',
       trend: 'up',
       icon: Target,
-      color: 'text-indigo-600',
-      bgColor: 'bg-indigo-100'
+      color: 'text-primary',
+      bgColor: 'bg-primary/20'
     }
   ];
 
@@ -89,14 +89,14 @@ export const EnhancedAnalytics: React.FC<EnhancedAnalyticsProps> = ({
           <select
             value={timeRange}
             onChange={(e) => onTimeRangeChange(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
           >
             <option value="7d">Last 7 days</option>
             <option value="30d">Last 30 days</option>
             <option value="90d">Last 90 days</option>
             <option value="1y">Last year</option>
           </select>
-          <button className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+          <button className="flex items-center space-x-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90">
             <Download className="h-4 w-4" />
             <span>Export Report</span>
           </button>
@@ -141,7 +141,7 @@ export const EnhancedAnalytics: React.FC<EnhancedAnalyticsProps> = ({
                 onClick={() => setActiveTab(tab.id as 'overview' | 'products' | 'customers' | 'funnel')}
                 className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
                   activeTab === tab.id
-                    ? 'border-indigo-500 text-indigo-600'
+                    ? 'border-primary text-primary'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
@@ -306,7 +306,7 @@ export const EnhancedAnalytics: React.FC<EnhancedAnalyticsProps> = ({
                         <span className="text-sm text-gray-600">20%</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div className="bg-purple-600 h-2 rounded-full" style={{ width: '20%' }}></div>
+                        <div className="bg-primary h-2 rounded-full" style={{ width: '20%' }}></div>
                       </div>
                     </div>
                   </div>
@@ -330,7 +330,7 @@ export const EnhancedAnalytics: React.FC<EnhancedAnalyticsProps> = ({
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-4">
                       <div 
-                        className="bg-indigo-600 h-4 rounded-full transition-all duration-500"
+                        className="bg-primary h-4 rounded-full transition-all duration-500"
                         style={{ width: `${stage.rate}%` }}
                       ></div>
                     </div>

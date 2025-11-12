@@ -83,67 +83,145 @@ const MuiButton = {
    * STYLE
    *************************************** */
   styleOverrides: {
+    root: ({ theme, ownerState }) => {
+      // Base styles for all buttons: white background, black border, black text/icon
+      const baseStyles = {
+        backgroundColor: '#FFFFFF',
+        color: '#000000',
+        border: '1px solid #000000',
+        borderColor: '#000000',
+        '& .MuiSvgIcon-root': {
+          color: '#000000',
+        },
+        '&:hover': {
+          backgroundColor: '#F5F5F5',
+          borderColor: '#000000',
+          color: '#000000',
+          '& .MuiSvgIcon-root': {
+            color: '#000000',
+          },
+        },
+        '&:active': {
+          backgroundColor: '#E0E0E0',
+          borderColor: '#000000',
+        },
+        '&.Mui-disabled': {
+          backgroundColor: '#FFFFFF',
+          color: 'rgba(0, 0, 0, 0.26)',
+          borderColor: 'rgba(0, 0, 0, 0.12)',
+          '& .MuiSvgIcon-root': {
+            color: 'rgba(0, 0, 0, 0.26)',
+          },
+        },
+      };
+      return baseStyles;
+    },
     /**
      * @variant contained
      */
     contained: ({ theme, ownerState }) => {
-      const styled = {
-        colors: styleColors(ownerState, (color) => ({
-          '&:hover': { boxShadow: theme.customShadows[color] },
-        })),
-        inheritColor: {
-          ...(ownerState.color === 'inherit' &&
-            !ownerState.disabled && {
-              color: theme.vars.palette.common.white,
-              backgroundColor: theme.vars.palette.grey[800],
-              '&:hover': {
-                boxShadow: theme.customShadows.z8,
-                backgroundColor: theme.vars.palette.grey[700],
-              },
-              [stylesMode.dark]: {
-                color: theme.vars.palette.grey[800],
-                backgroundColor: theme.vars.palette.common.white,
-                '&:hover': { backgroundColor: theme.vars.palette.grey[400] },
-              },
-            }),
+      // Override contained variant to match white bg, black border style
+      return {
+        backgroundColor: '#FFFFFF',
+        color: '#000000',
+        border: '1px solid #000000',
+        borderColor: '#000000',
+        boxShadow: 'none',
+        '& .MuiSvgIcon-root': {
+          color: '#000000',
+        },
+        '&:hover': {
+          backgroundColor: '#F5F5F5',
+          borderColor: '#000000',
+          color: '#000000',
+          boxShadow: 'none',
+          '& .MuiSvgIcon-root': {
+            color: '#000000',
+          },
+        },
+        '&:active': {
+          backgroundColor: '#E0E0E0',
+          borderColor: '#000000',
+        },
+        '&.Mui-disabled': {
+          backgroundColor: '#FFFFFF',
+          color: 'rgba(0, 0, 0, 0.26)',
+          borderColor: 'rgba(0, 0, 0, 0.12)',
+          '& .MuiSvgIcon-root': {
+            color: 'rgba(0, 0, 0, 0.26)',
+          },
         },
       };
-      return { ...styled.inheritColor, ...styled.colors };
     },
     /**
      * @variant outlined
      */
     outlined: ({ theme, ownerState }) => {
-      const styled = {
-        colors: styleColors(ownerState, (color) => ({
-          borderColor: varAlpha(theme.vars.palette[color].mainChannel, 0.48),
-        })),
-        inheritColor: {
-          ...(ownerState.color === 'inherit' &&
-            !ownerState.disabled && {
-              borderColor: varAlpha(theme.vars.palette.grey['500Channel'], 0.32),
-              '&:hover': { backgroundColor: theme.vars.palette.action.hover },
-            }),
+      // Override outlined variant to match white bg, black border style
+      return {
+        backgroundColor: '#FFFFFF',
+        color: '#000000',
+        border: '1px solid #000000',
+        borderColor: '#000000',
+        '& .MuiSvgIcon-root': {
+          color: '#000000',
         },
-        base: {
-          '&:hover': { borderColor: 'currentColor', boxShadow: '0 0 0 0.75px currentColor' },
+        '&:hover': {
+          backgroundColor: '#F5F5F5',
+          borderColor: '#000000',
+          color: '#000000',
+          '& .MuiSvgIcon-root': {
+            color: '#000000',
+          },
+        },
+        '&:active': {
+          backgroundColor: '#E0E0E0',
+          borderColor: '#000000',
+        },
+        '&.Mui-disabled': {
+          backgroundColor: '#FFFFFF',
+          color: 'rgba(0, 0, 0, 0.26)',
+          borderColor: 'rgba(0, 0, 0, 0.12)',
+          '& .MuiSvgIcon-root': {
+            color: 'rgba(0, 0, 0, 0.26)',
+          },
         },
       };
-      return { ...styled.base, ...styled.inheritColor, ...styled.colors };
     },
     /**
      * @variant text
      */
     text: ({ ownerState, theme }) => {
-      const styled = {
-        inheritColor: {
-          ...(ownerState.color === 'inherit' &&
-            !ownerState.disabled && {
-              '&:hover': { backgroundColor: theme.vars.palette.action.hover },
-            }),
+      // Override text variant to match white bg, black border style
+      return {
+        backgroundColor: '#FFFFFF',
+        color: '#000000',
+        border: '1px solid #000000',
+        borderColor: '#000000',
+        '& .MuiSvgIcon-root': {
+          color: '#000000',
+        },
+        '&:hover': {
+          backgroundColor: '#F5F5F5',
+          borderColor: '#000000',
+          color: '#000000',
+          '& .MuiSvgIcon-root': {
+            color: '#000000',
+          },
+        },
+        '&:active': {
+          backgroundColor: '#E0E0E0',
+          borderColor: '#000000',
+        },
+        '&.Mui-disabled': {
+          backgroundColor: '#FFFFFF',
+          color: 'rgba(0, 0, 0, 0.26)',
+          borderColor: 'rgba(0, 0, 0, 0.12)',
+          '& .MuiSvgIcon-root': {
+            color: 'rgba(0, 0, 0, 0.26)',
+          },
         },
       };
-      return { ...styled.inheritColor };
     },
     /**
      * @size
@@ -170,4 +248,46 @@ const MuiButton = {
 
 // ----------------------------------------------------------------------
 
-export const button = { MuiButtonBase, MuiButton };
+const MuiIconButton = {
+  /** **************************************
+   * STYLE
+   *************************************** */
+  styleOverrides: {
+    root: ({ theme, ownerState }) => {
+      // White background, black border, black icon
+      return {
+        backgroundColor: '#FFFFFF',
+        color: '#000000',
+        border: '1px solid #000000',
+        borderColor: '#000000',
+        '& .MuiSvgIcon-root': {
+          color: '#000000',
+        },
+        '&:hover': {
+          backgroundColor: '#F5F5F5',
+          borderColor: '#000000',
+          color: '#000000',
+          '& .MuiSvgIcon-root': {
+            color: '#000000',
+          },
+        },
+        '&:active': {
+          backgroundColor: '#E0E0E0',
+          borderColor: '#000000',
+        },
+        '&.Mui-disabled': {
+          backgroundColor: '#FFFFFF',
+          color: 'rgba(0, 0, 0, 0.26)',
+          borderColor: 'rgba(0, 0, 0, 0.12)',
+          '& .MuiSvgIcon-root': {
+            color: 'rgba(0, 0, 0, 0.26)',
+          },
+        },
+      };
+    },
+  },
+};
+
+// ----------------------------------------------------------------------
+
+export const button = { MuiButtonBase, MuiButton, MuiIconButton };

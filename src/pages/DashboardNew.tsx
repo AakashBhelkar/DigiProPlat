@@ -520,9 +520,9 @@ export function DashboardNew() {
                     <Table>
                       <TableHead>
                         <TableRow>
-                          <TableCell sx={{ fontWeight: 700, fontSize: '0.875rem' }}>Product</TableCell>
-                          <TableCell align="right" sx={{ fontWeight: 700, fontSize: '0.875rem' }}>Sales</TableCell>
-                          <TableCell align="right" sx={{ fontWeight: 700, fontSize: '0.875rem' }}>Revenue</TableCell>
+                          <TableCell sx={{ fontWeight: 700, fontSize: '0.875rem', color: 'primary.main' }}>Product</TableCell>
+                          <TableCell align="right" sx={{ fontWeight: 700, fontSize: '0.875rem', color: 'primary.main' }}>Sales</TableCell>
+                          <TableCell align="right" sx={{ fontWeight: 700, fontSize: '0.875rem', color: 'primary.main' }}>Revenue</TableCell>
                           <TableCell align="right"></TableCell>
                         </TableRow>
                       </TableHead>
